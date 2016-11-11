@@ -1,0 +1,11 @@
+package collage;
+
+public abstract class RTSPPacket {
+  public static enum Request {
+    OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE
+  }
+  public static final int ERROR_CODE_OK = 200;
+  private final String CRLF = "\r\n";
+  private int sessionNum;
+  private String data;
+}

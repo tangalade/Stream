@@ -1,0 +1,18 @@
+1447558733961	Copy compilation unit
+1447610662270	Copy compilation unit
+1447610678595	Rename type 'Speaker'
+1447643587680	Rename package 'dist'
+1447643684133	Delete element
+1447643798997	Rename type 'Quality'
+1447731839530	Delete element
+1447732564560	Rename type 'BufferedInputMediaStreamThread'
+1447732572170	Rename method 'setupInputMediaStream'
+1447733017725	Rename field 'audioCoder'
+1447733020417	Rename field 'videoCoder'
+1447733031429	Rename local variable 'audioCoder'
+1447733036947	Rename local variable 'videoCoder'
+1447737533908	Rename field 'maxPacketBufferSize'
+1447737614966	Rename field 'readerThread'
+1447740531028	Rename type 'BufferedInputPacketStreamThread'
+1447821831437	Delete element
+1448137344931	Rename local variable 'i'

@@ -1,0 +1,42 @@
+package collage;
+
+import com.xuggle.xuggler.IPacket;
+
+public interface InputPacketStream {
+
+  public void start();
+  
+  public IPacket tryNextPacket();
+
+  public IPacket getNextPacket();
+
+  public int getNumStreams();
+  
+  public IStreamCoder getStreamCoder(int index) {
+    return coders[index];
+  }
+  public IStreamCoder getStreamCoder(IPacket packet) {
+    return coders[packet.getStreamIndex()];
+  }
+
+  public IStream getStream(int index) {
+    return streams[index];
+  }
+  public IStream getStream(IPacket packet) {
+    return streams[packet.getStreamIndex()];
+  }
+  
+  public float getFullness() {
+    return packets.size()/maxPacketBufferSize*100;
+  }
+  
+  public boolean isStarted() {
+    return isStarted;
+  }
+  public boolean isDoneLoading() {
+    return isDoneLoading;
+  }
+  public boolean isDone() {
+    return isDone;
+  }
+}

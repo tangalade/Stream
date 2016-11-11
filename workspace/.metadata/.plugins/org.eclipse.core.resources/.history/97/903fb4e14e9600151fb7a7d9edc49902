@@ -1,0 +1,136 @@
+package collage;
+
+import com.xuggle.xuggler.IStreamCoder;
+
+public class RTSPRequestPacket extends RTSPPacket {
+  private Request reqType = null;
+  private Integer rtspSeqNum = null;
+  private Integer sessionNum = null;
+  private String url = null;
+
+  private String data = null;
+  
+  protected RTSPRequestPacket() {}
+  
+  public RTSPRequestPacket encode(Request reqType, String url, Integer rtspSeqNum, Integer sessionNum) throws IllegalArgumentException {
+    RTSPRequestPacket packet = new RTSPRequestPacket();
+    packet.reqType = reqType;
+    packet.rtspSeqNum = rtspSeqNum;
+    packet.sessionNum = sessionNum;
+    packet.url = url;
+    
+    packet.encode();
+    
+    return packet;
+  }
+  
+  public RTSPRequestPacket decode(String data) throws IllegalArgumentException {
+    RTSPRequestPacket packet = new RTSPRequestPacket();
+    packet.data = data;
+    
+    packet.decode();
+    
+    return packet;
+  }
+  
+  private void decodeMethod(String line) {
+    String[] tokens = line.split("\\s+");
+    if (tokens.length != 3)
+      throw new IllegalArgumentException("Invalid method line: " + line);
+
+    reqType = Request.valueOf(tokens[0]);
+    url = tokens[1];
+    if (tokens[2] != RTSP_VERSION)
+      throw new IllegalArgumentException("Unsupported RTSP Version: " + tokens[2]);
+  }
+  private void decodeSeqNum(String line) {
+    String[] tokens = line.split("\\s+");
+    if (tokens.length != 2)
+      throw new IllegalArgumentException("Invalid sequence num line: " + line);
+    
+    try {
+      rtspSeqNum = Integer.parseInt(tokens[1]);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid sequence num: " + tokens[1]);
+    }
+  }
+  private void decodeSessionNum(String line) {
+    String[] tokens = line.split("\\s+");
+    if (tokens.length != 2)
+      throw new IllegalArgumentException("Invalid session num line: " + line);
+    
+    sessionNum = Integer.parseInt(tokens[1]);
+  }
+  private void decode() {
+    String[] lines = data.split(CRLF);
+    if (lines.length < 2)
+      throw new IllegalArgumentException("Invalid packet: " + data);
+    try {
+      decodeMethod(lines[0]);
+      decodeSeqNum(lines[1]);
+      if (lines.length >= 3)
+        decodeSessionNum(lines[2]);
+    } catch (Exception e) {
+      throw new IllegalArgumentException(e.getMessage() + "\nPacket: " + data);
+    }
+  }
+  
+  private String encodeMethod() {
+    return reqType.toString() + " " + url + " " + RTSP_VERSION + CRLF;
+  }
+  private String encodeSeqNum() {
+    return "CSeq: " + rtspSeqNum + CRLF;
+  }
+  private String encodeSessionNum() {
+    String ret = "";
+    if (sessionNum != null)
+      ret = "Session: " + sessionNum + CRLF;
+    return ret;
+  }
+  private void encode() {
+    String encodedPacket = "";
+    encodedPacket += encodeMethod();
+    encodedPacket += encodeSeqNum();
+    encodedPacket += encodeSessionNum();
+    this.data = encodedPacket;
+  }
+  
+  public String toString() {
+    return data;
+  }
+
+  public Request reqType() {
+    return reqType;
+  }
+  public void setReqType(Request reqType) {
+    this.reqType = reqType;
+  }
+
+  public Integer rtspSeqNum() {
+    return rtspSeqNum;
+  }
+  public void setRtspSeqNum(Integer rtspSeqNum) {
+    this.rtspSeqNum = rtspSeqNum;
+  }
+
+  public Integer sessionNum() {
+    return sessionNum;
+  }
+  public void setSessionNum(Integer sessionNum) {
+    this.sessionNum = sessionNum;
+  }
+
+  public String url() {
+    return url;
+  }
+  public void setUrl(String url) {
+    this.url = url;
+  }
+
+  public String data() {
+    return data;
+  }
+  public void setData(String data) {
+    this.data = data;
+  }
+}

@@ -1,0 +1,163 @@
+package collage;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import com.xuggle.xuggler.IContainer;
+import com.xuggle.xuggler.IPacket;
+import com.xuggle.xuggler.IStream;
+import com.xuggle.xuggler.IStreamCoder;
+
+public class BufferedInputPacketStream implements InputPacketStream {
+	private int maxBufferSize;
+	
+	private String filename = "Name me";
+  private boolean isStarted = false;
+  private boolean isDone = false;
+  private boolean isDoneLoading = false;
+	
+  private BlockingQueue<IPacket> packets;
+  	
+  private IStream[] streams = null;
+  private IStreamCoder[] coders = null;
+
+  private IContainer container;
+
+  private BufferedInputPacketStreamThread workerThread;
+
+  public BufferedInputPacketStream(String filename, int maxPacketBufferSize) {
+    this.filename = filename;
+    this.maxBufferSize = maxPacketBufferSize;
+    this.packets = new LinkedBlockingQueue<IPacket>(maxPacketBufferSize);
+    setupInputPacketStream();
+  }
+  
+  public BufferedInputPacketStream(String filename) {
+    this(filename, 100);
+  }
+
+	private void setupInputPacketStream() {
+    // Create a Xuggler container object
+    container = IContainer.make();
+
+    // Open up the container
+    if (container.open(filename, IContainer.Type.READ, null) < 0)
+      throw new IllegalArgumentException("could not open file: " + filename);
+    
+    // query how many streams the call to open found
+    int numStreams = container.getNumStreams();
+    if (numStreams <= 0)
+      throw new RuntimeException("No streams in input file: " + filename);
+    
+    streams = new IStream[numStreams];
+    coders = new IStreamCoder[numStreams];
+    
+    // and iterate through the streams to find the first audio stream
+    for(int i = 0; i < numStreams; i++) {
+      IStream stream = container.getStream(i);
+      IStreamCoder coder = stream.getStreamCoder();
+      
+      streams[i] = stream;
+      coders[i] = coder;
+    }
+  }
+
+	private class BufferedInputPacketStreamThread extends Thread {
+	  public void run() {
+			IPacket packet = IPacket.make();
+
+			while(container.readNextPacket(packet) >= 0) {
+			  try {
+			    packets.put(packet);
+			  } catch (InterruptedException e) {
+          throw new RuntimeException("interrupted while adding new packet to queue");
+			  }
+			  packet = IPacket.make();
+			}
+			isDoneLoading = true;
+		}
+	}
+
+	private void cleanup() {
+	  if (isDone)
+	    return;
+	  isDone = true;
+    if (container != null)
+      container.close();
+    for (int i=0; i<coders.length; i++) {
+      if (coders[i] != null)
+        coders[i].close();
+      coders[i] = null;
+    }
+    container = null;
+    streams = null;
+    coders = null;
+	}
+	
+  public void start() {
+    if (isStarted)
+      return;
+    isStarted = true;
+
+    workerThread = new BufferedInputPacketStreamThread();
+    workerThread.start();
+  }
+
+  public IPacket tryNextPacket() {
+    if (isDone)
+      return null;
+    IPacket ret = packets.poll();
+    if (packets.isEmpty() && isDoneLoading)
+      cleanup();
+    return ret;
+  }
+  
+  public IPacket getNextPacket() {
+    if (isDone || (packets.isEmpty() && isDoneLoading))
+      return null;
+    IPacket ret = null;
+    try {
+      ret = packets.take();
+      if (packets.isEmpty() && isDoneLoading)
+        cleanup();
+    } catch (InterruptedException e) {
+      System.err.println("Interrupted while getting next packet");
+      e.printStackTrace();
+    }
+    return ret;
+  }
+
+  public int getMaxBufferSize() {
+    return maxBufferSize;
+  }
+  public int getNumStreams() {
+    return streams.length;
+  }
+  public float getFullness() {
+    return packets.size()/maxBufferSize*100;
+  }
+  
+  public IStreamCoder getStreamCoder(int index) {
+    return coders[index];
+  }
+  public IStreamCoder getStreamCoder(IPacket packet) {
+    return coders[packet.getStreamIndex()];
+  }
+
+  public IStream getStream(int index) {
+    return streams[index];
+  }
+  public IStream getStream(IPacket packet) {
+    return streams[packet.getStreamIndex()];
+  }
+  
+  public boolean isStarted() {
+    return isStarted;
+  }
+  public boolean isDoneLoading() {
+    return isDoneLoading;
+  }
+  public boolean isDone() {
+    return isDone;
+  }
+
+}

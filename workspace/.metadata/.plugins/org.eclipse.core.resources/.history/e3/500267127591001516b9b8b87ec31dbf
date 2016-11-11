@@ -1,0 +1,46 @@
+package collage;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.WritableByteChannel;
+
+import com.xuggle.xuggler.IContainer;
+import com.xuggle.xuggler.IContainerFormat;
+
+public class Client {
+
+  public static void main(String[] args) throws IOException {
+    IContainer container = IContainer.make();
+    
+    DatagramChannel channel = DatagramChannel.open();
+    channel.connect(new InetSocketAddress("localhost", CollageGlobal.port));
+    container.open((WritableByteChannel)channel, IContainerFormat.make());
+    
+    if (container.queryStreamMetaData() < 0)
+      throw new RuntimeException("Unable to query stream metadata");
+    
+    // query how many streams the call to open found
+    int numStreams = container.getNumStreams();
+    if (numStreams <= 0)
+      throw new RuntimeException("No streams in container");
+    
+    streams = new IStream[numStreams];
+    decoders = new IStreamCoder[numStreams];
+    encoders = new IStreamCoder[numStreams];
+    
+    // and iterate through the streams to find the first audio stream
+    for(int i = 0; i < numStreams; i++) {
+      IStream stream = container.getStream(i);
+      IStreamCoder decoder = stream.getStreamCoder();
+      IStreamCoder encoder = IStreamCoder.make(IStreamCoder.Direction.ENCODING, decoder);
+      if (encoder.open(null, null) < 0)
+        System.err.println("Error opening encoder");
+      
+      streams[i] = stream;
+      decoders[i] = decoder;
+      encoders[i] = encoder; 
+    }
+    
+  }
+}

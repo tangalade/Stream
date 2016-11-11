@@ -1,0 +1,18 @@
+package collage;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.DatagramChannel;
+
+import com.xuggle.xuggler.IContainer;
+
+public class Client {
+
+  public static void main(String[] args) throws IOException {
+    IContainer container = IContainer.make();
+    
+    DatagramChannel channel = DatagramChannel.open();
+    channel.connect(new InetSocketAddress("localhost", CollageGlobal.port));
+    
+  }
+}

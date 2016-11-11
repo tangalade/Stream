@@ -1,0 +1,12 @@
+package collage;
+
+import com.xuggle.xuggler.IContainer;
+
+public class Client {
+
+  public static void main(String[] args) {
+    IContainer container = IContainer.make();
+    
+    
+  }
+}

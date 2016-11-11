@@ -1,0 +1,182 @@
+package collage;
+
+import com.xuggle.xuggler.IStreamCoder;
+
+public class RTSPResponsePacket extends RTSPPacket {
+  private ErrorCode errorCode = null;
+  private Integer rtspSeqNum = null;
+  private Integer sessionNum = null;
+  private Method reqType = null;
+  private String data = null;
+
+  // OPTIONS
+  private Method[] supportedMethods = {Method.DESCRIBE, Method.SETUP, Method.TEARDOWN, Method.PLAY, Method.PAUSE};
+  // DESCRIBE
+  private IStreamCoder audioCoder;
+  private IStreamCoder videoCoder;
+  private int aStreamIndex;
+  private int vStreamIndex;
+  
+  public RTSPResponsePacket(Method reqType, ErrorCode errorCode, Integer rtspSeqNum, Integer sessionNum) throws IllegalArgumentException {
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.sessionNum = sessionNum;
+    encode();
+  }
+  public RTSPResponsePacket(Method reqType, ErrorCode errorCode, Integer rtspSeqNum, Integer sessionNum,
+      Method[] supportedMethods) throws IllegalArgumentException {
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.sessionNum = sessionNum;
+    this.supportedMethods = supportedMethods;
+    encode();
+  }
+  public RTSPResponsePacket(Method reqType, ErrorCode errorCode, Integer rtspSeqNum, Integer sessionNum,
+      MediaStream mediaStream) throws IllegalArgumentException { 
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.sessionNum = sessionNum;
+    if (mediaStream == null)
+      throw new IllegalArgumentException("null mediaStream");
+    this.audioCoder = mediaStream.getAudioDecoder();
+    this.videoCoder = mediaStream.getVideoDecoder();
+    this.aStreamIndex = mediaStream.getAudioStreamId();
+    this.vStreamIndex = mediaStream.getVideoStreamId();
+    encode();
+  }
+  public RTSPResponsePacket(Method reqType, ErrorCode errorCode, Integer rtspSeqNum, Integer sessionNum,
+      IStreamCoder audioCoder, IStreamCoder videoCoder,
+      int aStreamIndex, int vStreamIndex) throws IllegalArgumentException { 
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.sessionNum = sessionNum;
+    this.audioCoder = audioCoder;
+    this.videoCoder = videoCoder;
+    this.aStreamIndex = aStreamIndex;
+    this.vStreamIndex = aStreamIndex;
+    encode();
+  }
+  
+  private void decodeStatus(String line) {
+    String[] tokens = line.split("\\s+");
+    if (tokens.length != 3)
+      throw new IllegalArgumentException("Invalid status line: " + line);
+
+    if (tokens[0] != RTSP_VERSION)
+      throw new IllegalArgumentException("Unsupported RTSP Version: " + tokens[2]);
+    errorCode = new ErrorCode(Integer.parseInt(tokens[1]), tokens[2]);
+  }
+  private void decodeSeqNum(String line) {
+    String[] tokens = line.split("\\s+");
+    if (tokens.length != 2)
+      throw new IllegalArgumentException("Invalid sequence num line: " + line);
+    
+    try {
+      rtspSeqNum = Integer.parseInt(tokens[1]);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid sequence num: " + tokens[1]);
+    }
+  }
+  private void decodeSessionNum(String line) {
+    String[] tokens = line.split("\\s+");
+    if (tokens.length != 2)
+      throw new IllegalArgumentException("Invalid session num line: " + line);
+    
+    try {
+      sessionNum = Integer.parseInt(tokens[1]);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid session num: " + tokens[1]);
+    }
+  }
+  private void decodeOptions(String line) {
+    switch (reqType) {
+    case OPTIONS:
+      String[] tokens = line.split(": ");
+      if (tokens.length != 2)
+        throw new IllegalArgumentException("Invalid options line: " + line);
+      tokens = tokens[1].split(", ");
+      supportedMethods = new Method[tokens.length];
+      for (int i=0; i<tokens.length; i++)
+        supportedMethods[i] = Method.valueOf(tokens[i]);
+      break;
+    default:
+      break;
+    }
+  }
+  
+  private String encodeStatus() {
+    return RTSP_VERSION + " " + errorCode.code() + " " + errorCode.description() + CRLF;
+  }
+  private String encodeSeqNum() {
+    return "CSeq: " + rtspSeqNum + CRLF;
+  }
+  private String encodeSessionNum() {
+    String ret = "";
+    if (sessionNum != null)
+      ret = "Session: " + sessionNum + CRLF;
+    return ret;
+  }
+  private String encodeOptions() {
+    String options = "";
+    switch (reqType) {
+    case OPTIONS:
+      options += "Public: ";
+      if (supportedMethods.length > 0) {
+        for (int i=0; i<supportedMethods.length-1; i++)
+          options += supportedMethods[i].toString() + ", ";
+        options += supportedMethods[supportedMethods.length-1].toString();
+      }
+      break;
+    default:
+      break;
+    }
+    return options;
+  }
+  private String encodeContent() {
+    String all = "";
+    String content = "";
+    int contentLength = 0;
+    switch (reqType) {
+    case DESCRIBE:
+      if (audioCoder != null && aStreamIndex != -1) {
+        content += "aStreamIndex=" + aStreamIndex;
+        content += "aCodecId="     + audioCoder.getCodecID().swigValue();
+        content += "aSampleRate="  + audioCoder.getSampleRate();
+        content += "aChannels="    + audioCoder.getChannels();
+      };
+      if (videoCoder != null && vStreamIndex != -1) {
+        content += "vStreamIndex=" + vStreamIndex;
+        content += "vCodecId="     + videoCoder.getCodecID().swigValue();
+        content += "vWidth="       + videoCoder.getWidth();
+        content += "vHeight="      + videoCoder.getHeight();
+        content += "vPixelType="   + videoCoder.getPixelType().swigValue();
+        content += "vTimeBase="    + videoCoder.getTimeBase().getValue();
+      }
+      break;
+    default:
+      break;
+    }
+    contentLength += content.length();
+    if (contentLength > 0) {
+      all += "Content-Length: " + contentLength + CRLF;
+      all += CRLF;
+      all += content + CRLF;
+    }
+    return all;
+  }
+  private void encode() {
+    String encodedPacket = "";
+    encodedPacket += encodeStatus();
+    encodedPacket += encodeSeqNum();
+    encodedPacket += encodeSessionNum();
+    encodedPacket += encodeOptions();
+    encodedPacket += encodeContent();
+    
+    this.data = encodedPacket;
+  }
+
+}

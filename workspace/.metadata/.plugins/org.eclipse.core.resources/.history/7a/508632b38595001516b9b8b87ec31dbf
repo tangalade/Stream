@@ -1,0 +1,84 @@
+package collage;
+
+import com.xuggle.xuggler.IStreamCoder;
+
+public class RTSPResponsePacket {
+  public static enum REQUEST {
+    OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE
+  }
+  public static final int ERROR_CODE_OK = 200;
+  private final String CRLF = "\r\n";
+
+  private int errorCode;
+  private int rtspSeqNum;
+  private REQUEST reqType;
+  private String packet;
+  
+  private MediaStream mediaStream = null;
+  
+  public RTSPResponsePacket(REQUEST reqType, int errorCode, int rtspSeqNum) {
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.packet = encode();
+  }
+  
+  public RTSPResponsePacket(REQUEST reqType, int errorCode, int rtspSeqNum, MediaStream mediaStream) { 
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.mediaStream = mediaStream;
+    this.packet = encode();
+  }
+  
+  private String encodeStatus() {
+    return "RTSP/1.0 " + errorCode + " OK" + CRLF;
+  }
+  private String encodeSeqNum() {
+    return "CSeq: " + rtspSeqNum + CRLF;
+  }
+  private String encode() {
+    String encodedPacket = "";
+    int contentLength = 0;
+    String content = "";
+
+    encodedPacket += encodeStatus();
+    encodedPacket += encodeSeqNum();
+    switch (reqType) {
+    case OPTIONS:
+      content += "Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE";
+      break;
+    case DESCRIBE:
+      if (videoDecoder == null || audioDecoder == null || aStreamIndex == -1 || vStreamIndex == -1)
+        throw new IllegalArgumentException("null videoDecoder");
+      if (videoDecoder == null || audioDecoder == null || aStreamIndex == -1 || vStreamIndex == -1)
+        throw new IllegalArgumentException("null audioDecoder");
+      if (videoDecoder == null || audioDecoder == null || aStreamIndex == -1 || vStreamIndex == -1)
+        throw new IllegalArgumentException("invalid aStreamIndex: " + aStreamIndex);
+      if (videoDecoder == null || audioDecoder == null || aStreamIndex == -1 || vStreamIndex == -1)
+        throw new IllegalArgumentException("invalid vStreamIndex: " + vStreamIndex);
+      IStreamCoder audioDecoder = mediaStream.getAudioDecoder();
+      IStreamCoder videoDecoder = mediaStream.getVideoDecoder();
+      params += "aStreamIndex=" + mediaStream.getAudioStreamId();
+      params += "aCodecId="     + audioDecoder.getCodecID().swigValue();
+      params += "aSampleRate="  + audioDecoder.getSampleRate();
+      params += "aChannels="    + audioDecoder.getChannels();
+      params += "vStreamIndex=" + mediaStream.getVideoStreamId();
+      params += "vCodecId="     + videoDecoder.getCodecID().swigValue();
+      params += "vWidth="       + videoDecoder.getWidth();
+      params += "vHeight="      + videoDecoder.getHeight();
+      params += "vPixelType="   + videoDecoder.getPixelType().swigValue();
+      params += "vTimeBase="    + videoDecoder.getTimeBase().getValue();
+      
+      break;
+    }
+    contentLength += content.length();
+    return encodedPacket;
+  }
+
+  public static class OPTIONS {
+    public OPTIONS(int errorCode, int rtspSeqNum) {
+      
+    }
+  }
+}

@@ -1,0 +1,34 @@
+package collage;
+
+public class IPacketDatagramPacket {
+  /**
+   * IPacket number in stream
+   */
+  private long iPacketNum;
+  /**
+   * Index of this IPacket frame, relative to its other frames
+   */
+  private long iPacketFrameIndex;
+  /**
+   * Number of frames composing this IPacket
+   */
+  private long iPacketNumFrames;
+  /**
+   * Frame length in bytes
+   */
+  private long iPacketFrameLength;
+  /**
+   * Frame byte data
+   */
+  private byte[] iPacketFrame;
+
+  public IPacketDatagramPacket(long iPacketNum, long iPacketFrameIndex,
+      long iPacketNumFrames, long iPacketFrameLength, byte[] iPacketFrame) {
+    this.iPacketNum = iPacketNum;
+    this.iPacketFrameIndex = iPacketFrameIndex;
+    this.iPacketNumFrames = iPacketNumFrames;
+    this.iPacketFrameLength = iPacketFrameLength;
+    this.iPacketFrame = iPacketFrame;
+  }
+  
+}

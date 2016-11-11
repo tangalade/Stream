@@ -1,0 +1,15 @@
+package collage;
+
+public class RTSPResponsePacket {
+  public static enum REQUEST {
+    OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE
+  }
+  private int errorCode;
+  private int rtspSeqNum;
+  
+  public RTSPResponsePacket(int errorCode, int rtspSeqNum) {
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+  }
+  
+}

@@ -1,0 +1,69 @@
+package collage;
+
+public class RTSPResponsePacket {
+  public static enum REQUEST {
+    OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE
+  }
+  public static final int ERROR_CODE_OK = 200;
+  private final String CRLF = "\r\n";
+
+  private int errorCode;
+  private int rtspSeqNum;
+  private REQUEST reqType;
+  private String packet;
+  
+  IStreamCoder audioDecoder = null;
+  IStreamCoder videoDecoder = null;
+  private int aStreamIndex = -1;
+  private int vStreamIndex = -1;
+
+  public RTSPResponsePacket(REQUEST reqType, int errorCode, int rtspSeqNum) {
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.packetLines = encode();
+  }
+  
+  private String encodeStatus() {
+    return "RTSP/1.0 " + errorCode + " OK" + CRLF;
+  }
+  private String encodeSeqNum() {
+    return "CSeq: " + rtspSeqNum + CRLF;
+  }
+  private String encode() {
+    String encodedPacket = "";
+    int contentLength = 0;
+    String content = "";
+
+    encodedPacket += encodeStatus();
+    encodedPacket += encodeSeqNum();
+    switch (reqType) {
+    case OPTIONS:
+      content += "Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE";
+      break;
+    case DESCRIBE:
+      IStreamCoder audioDecoder = mediaStream.getAudioDecoder();
+      IStreamCoder videoDecoder = mediaStream.getVideoDecoder();
+      params += "aStreamIndex=" + mediaStream.getAudioStreamId();
+      params += "aCodecId="     + audioDecoder.getCodecID().swigValue();
+      params += "aSampleRate="  + audioDecoder.getSampleRate();
+      params += "aChannels="    + audioDecoder.getChannels();
+      params += "vStreamIndex=" + mediaStream.getVideoStreamId();
+      params += "vCodecId="     + videoDecoder.getCodecID().swigValue();
+      params += "vWidth="       + videoDecoder.getWidth();
+      params += "vHeight="      + videoDecoder.getHeight();
+      params += "vPixelType="   + videoDecoder.getPixelType().swigValue();
+      params += "vTimeBase="    + videoDecoder.getTimeBase().getValue();
+      
+      break;
+    }
+    contentLength += content.length();
+    return encodedPacket;
+  }
+
+  public static class OPTIONS {
+    public OPTIONS(int errorCode, int rtspSeqNum) {
+      
+    }
+  }
+}

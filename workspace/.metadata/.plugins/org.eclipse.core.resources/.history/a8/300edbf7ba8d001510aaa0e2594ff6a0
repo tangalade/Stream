@@ -1,0 +1,29 @@
+package collage;
+
+import com.xuggle.xuggler.ICodec;
+import com.xuggle.xuggler.IPixelFormat;
+import com.xuggle.xuggler.IRational;
+
+public class CollageGlobal {
+  public static ICodec.ID videoCodecID = ICodec.ID.CODEC_ID_H264;
+  public static IPixelFormat.Type videoPixelFormatType = IPixelFormat.Type.YUV420P;
+  // FIXME: this is time between frames (1/30 is 30fps)
+  public static IRational videoTimeBase = IRational.make(1, 30);
+
+  public static enum QUALITY {
+    MOBILE (640,  360),
+    LOW    (853,  480),
+    MEDIUM (1280, 720),
+    HIGH   (1920, 1080);
+    
+    private final int width;
+    private final int height;
+
+    QUALITY(int width, int height) {
+      this.width = width;
+      this.height = height;
+    }
+    public int width()  { return width;  }
+    public int height() { return height; } 
+  }
+}

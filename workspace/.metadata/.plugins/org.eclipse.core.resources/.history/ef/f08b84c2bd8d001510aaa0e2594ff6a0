@@ -1,0 +1,342 @@
+package collage;
+
+import java.util.concurrent.LinkedBlockingQueue;
+
+import com.xuggle.xuggler.Global;
+import com.xuggle.xuggler.IAudioResampler;
+import com.xuggle.xuggler.IAudioSamples;
+import com.xuggle.xuggler.ICodec;
+import com.xuggle.xuggler.IPacket;
+import com.xuggle.xuggler.IRational;
+import com.xuggle.xuggler.IStream;
+import com.xuggle.xuggler.IStreamCoder;
+import com.xuggle.xuggler.IVideoPicture;
+import com.xuggle.xuggler.IVideoResampler;
+
+public class Modifier extends InputPacketStream {
+  private int maxBufferSize = -1;
+  private ModifierWorkerThread workerThread = null;
+  
+  private InputPacketStream pStream = null;
+  private IStreamCoder aODecoder = null;
+  private IStreamCoder aOEncoder = null;
+  private IStreamCoder vODecoder = null;
+  private IStreamCoder vOEncoder = null;
+  private IStream[] mIStreams = null;
+  private IStream[] mOStreams = null;
+  private IStreamCoder[] mICoders = null;
+  private IStreamCoder[] mOCoders = null;
+  private IAudioResampler[] mASamplers = null;
+  private IVideoResampler[] mVSamplers = null;
+  private IVideoPicture[] mIVideoPictures = null;
+  private IVideoPicture[] mOVideoPictures = null;
+  private IAudioSamples[] mISamples = null;
+  private IAudioSamples[] mOSamples = null;
+  
+  IVideoResampler resampler = null;
+
+  public Modifier(InputPacketStream pStream, IStreamCoder aOEncoder, IStreamCoder vOEncoder, int maxBufferSize) {
+    this.pStream = pStream;
+    this.aOEncoder = aOEncoder;
+    this.vOEncoder = vOEncoder;
+    this.maxBufferSize = maxBufferSize;
+    this.packets = new LinkedBlockingQueue<IPacket>(maxBufferSize);
+    setupStreams();
+  }
+  
+  public Modifier(InputPacketStream pStream, IStreamCoder aOCoder, IStreamCoder vOCoder) {
+    this(pStream, aOCoder, vOCoder, 100);
+  }  
+  
+  public void start() {
+    if (isStarted)
+      return;
+    isStarted = true;
+    pStream.start();
+    
+    workerThread = new ModifierWorkerThread();
+    workerThread.start();
+  }
+  
+  protected void cleanup() {
+    if (isDone)
+      return;
+    isDone = true;
+  }
+  
+  private void setupStreams() {
+    int numStreams = pStream.getNumStreams();
+    
+    aODecoder = IStreamCoder.make(IStreamCoder.Direction.DECODING, aOEncoder);
+    if (aODecoder.open(null, null) < 0)
+      System.err.println("Error opening aODecoder");
+    vODecoder = IStreamCoder.make(IStreamCoder.Direction.DECODING, vOEncoder);
+    
+    mIStreams = new IStream[numStreams];
+    mICoders = new IStreamCoder[numStreams];
+    mOStreams = new IStream[numStreams];
+    mOCoders = new IStreamCoder[numStreams];
+    mASamplers = new IAudioResampler[numStreams];
+    mVSamplers = new IVideoResampler[numStreams];
+    mIVideoPictures = new IVideoPicture[numStreams];
+    mOVideoPictures = new IVideoPicture[numStreams];
+    mISamples = new IAudioSamples[numStreams];
+    mOSamples = new IAudioSamples[numStreams];
+    
+    for (int i=0; i<numStreams; i++) {
+      IStream is = pStream.getStream(i);
+      IStreamCoder ic = is.getStreamCoder();
+      ICodec.Type cType = ic.getCodecType();
+      
+      mIStreams[i] = is;
+      mICoders[i] = ic;
+      mOStreams[i] = null;
+      mOCoders[i] = null;
+      mASamplers[i] = null;
+      mVSamplers[i] = null;
+      mIVideoPictures[i] = null;
+      mOVideoPictures[i] = null;
+      mISamples[i] = null;
+      mOSamples[i] = null;
+      
+      if (cType == ICodec.Type.CODEC_TYPE_AUDIO) {
+        IStreamCoder oc = aOCoder;
+        
+        mOCoders[i] = oc;
+        if (oc.getChannels() != ic.getChannels() ||
+            oc.getSampleRate() != ic.getSampleRate() ||
+            oc.getSampleFormat() != ic.getSampleFormat()) {
+          mASamplers[i] = IAudioResampler.make(oc.getChannels(), ic
+              .getChannels(), oc.getSampleRate(), ic.getSampleRate(),
+              oc.getSampleFormat(), ic.getSampleFormat());
+          if (mASamplers[i] == null)
+            throw new RuntimeException("could not open audio resampler for stream: " + i);
+        } else {
+          mASamplers[i] = null;
+        }
+        mISamples[i] = IAudioSamples.make(1024, ic.getChannels(), ic.getSampleFormat());
+        mOSamples[i] = IAudioSamples.make(1024, oc.getChannels(), oc.getSampleFormat());
+      }
+      else if (cType == ICodec.Type.CODEC_TYPE_VIDEO) {
+        IStreamCoder oc = vOCoder;
+        
+        // FIXME: if not using this stream, do not set coder
+        mOCoders[i] = oc;
+        if (oc.getWidth() != ic.getWidth() ||
+            oc.getHeight() != ic.getHeight() ||
+            oc.getPixelType() != ic.getPixelType()) {
+          mVSamplers[i] = IVideoResampler.make(oc.getWidth(), oc.getHeight(), oc.getPixelType(),
+              ic.getWidth(), ic.getHeight(), ic.getPixelType());
+        }
+        
+        mIVideoPictures[i] = IVideoPicture.make(ic.getPixelType(), ic
+            .getWidth(), ic.getHeight());
+        mOVideoPictures[i] = IVideoPicture.make(oc.getPixelType(), oc
+            .getWidth(), oc.getHeight());
+      }
+      else
+      {
+        System.out.println("Ignoring input stream " + i + " of type " + cType);
+      }
+      
+      if (mICoders[i] != null) {
+        int retval;
+        retval = mICoders[i].open(null, null);
+        if (retval < 0)
+          throw new RuntimeException("could not open input decoder for stream: " + i);
+      }
+    }
+  }
+  
+  // override in specific modifier
+  protected IAudioSamples alterAudioFrame(IAudioSamples audioFrame) {
+    return audioFrame;
+  }
+  // override in specific modifier
+  protected IVideoPicture alterVideoFrame(IVideoPicture videoFrame) {
+    return videoFrame;
+  }
+  
+  private class ModifierWorkerThread extends Thread {
+    public void run() {
+      IPacket iPacket = IPacket.make();
+      IPacket oPacket = IPacket.make();
+
+      IAudioSamples inSamples = null;
+      IAudioSamples outSamples = null;
+      IAudioSamples reSamples = null;
+      
+      int retval = 0;
+      
+      IStreamCoder ic = null;
+      IStreamCoder oc = null;
+      IAudioResampler as = null;
+      IVideoResampler vs = null;
+      IVideoPicture inFrame = null;
+      IVideoPicture reFrame = null;
+      
+      while(!pStream.isDone()) {
+        iPacket = pStream.getNextPacket();
+        int i = iPacket.getStreamIndex();
+        int offset = 0;
+        
+        IStream stream = pStream.getStream(i);
+        long tsOffset = 0;
+        if (stream.getStartTime() != Global.NO_PTS && stream.getStartTime() > 0
+            && stream.getTimeBase() != null)
+        {
+          IRational defTimeBase = IRational.make(1,
+              (int) Global.DEFAULT_PTS_PER_SECOND);
+          tsOffset = defTimeBase.rescale(stream.getStartTime(), stream
+              .getTimeBase());
+        }
+        
+        ic = mICoders[i];
+        oc = mOCoders[i];
+        as = mASamplers[i];
+        vs = mVSamplers[i];
+        inFrame = mIVideoPictures[i];
+        reFrame = mOVideoPictures[i];
+        inSamples = mISamples[i];
+        reSamples = mOSamples[i];
+        
+        // ignore this packet, coder not set up
+        if (oc == null)
+          continue;
+        
+        ICodec.Type cType = ic.getCodecType();
+
+        if (cType == ICodec.Type.CODEC_TYPE_AUDIO)
+        {
+          while (offset < iPacket.getSize()) {
+            retval = ic.decodeAudio(inSamples, iPacket, offset);
+            if (retval <= 0)
+              throw new RuntimeException("could not decode audio.  stream: " + i);
+
+            if (inSamples.getTimeStamp() != Global.NO_PTS)
+              inSamples.setTimeStamp(inSamples.getTimeStamp() - tsOffset);
+
+            offset += retval;
+            int numSamplesConsumed = 0;
+
+            if (as != null && inSamples.getNumSamples() > 0) {
+              retval = as.resample(reSamples, inSamples, inSamples
+                  .getNumSamples());
+              outSamples = reSamples;
+            } else {
+              outSamples = inSamples;
+            }
+
+            outSamples = alterAudioFrame(outSamples);
+
+            while (numSamplesConsumed < outSamples.getNumSamples()) {
+              retval = oc.encodeAudio(oPacket, outSamples, numSamplesConsumed);
+              if (retval <= 0)
+                throw new RuntimeException("Could not encode any audio: "
+                    + retval);
+              numSamplesConsumed += retval;
+              if (oPacket.isComplete()) {
+                oPacket.setStreamIndex(iPacket.getStreamIndex());
+                packets.add(oPacket);
+              }
+            }
+          }
+        } else if (cType == ICodec.Type.CODEC_TYPE_VIDEO) {
+          IVideoPicture outFrame = null;
+          while (offset < iPacket.getSize()) {
+            retval = ic.decodeVideo(inFrame, iPacket, offset);
+            if (retval <= 0)
+              throw new RuntimeException("could not decode any video.  stream: "
+                  + i);
+
+            if (inFrame.getTimeStamp() != Global.NO_PTS)
+              inFrame.setTimeStamp(inFrame.getTimeStamp() - tsOffset);
+
+            offset += retval;
+            if (inFrame.isComplete()) {
+              if (vs != null) {
+                retval = vs.resample(reFrame, inFrame);
+                if (retval < 0)
+                  throw new RuntimeException("could not resample video");
+                outFrame = reFrame;
+              } else {
+                outFrame = inFrame;
+              }
+
+              outFrame = alterVideoFrame(outFrame);
+
+              outFrame.setQuality(0);
+              retval = oc.encodeVideo(oPacket, outFrame, 0);
+              if (retval < 0)
+                throw new RuntimeException("could not encode video");
+              
+              if (oPacket.isComplete()) {
+                oPacket.setStreamIndex(iPacket.getStreamIndex());
+                packets.add(oPacket);
+              }
+            }
+          }
+        }
+      }
+      isDoneLoading = true;
+    }
+  }
+
+  public IPacket tryNextPacket() {
+    if (isDone)
+      return null;
+    IPacket ret = packets.poll();
+    if (packets.isEmpty() && isDoneLoading)
+      cleanup();
+    return ret;
+  }
+  
+  public IPacket getNextPacket() {
+    if (isDone || (packets.isEmpty() && isDoneLoading))
+      return null;
+    IPacket ret = null;
+    try {
+      ret = packets.take();
+      if (packets.isEmpty() && isDoneLoading)
+        cleanup();
+    } catch (InterruptedException e) {
+      System.err.println("Interrupted while getting next packet");
+      e.printStackTrace();
+    }
+    return ret;
+  }
+
+  public int getMaxBufferSize() {
+    return maxBufferSize;
+  }
+  public int getNumStreams() {
+    return mOStreams.length;
+  }
+  public float getFullness() {
+    return packets.size()/maxBufferSize*100;
+  }
+
+  public IStreamCoder getStreamCoder(int index) {
+    return mOCoders[index];
+  }
+  public IStreamCoder getStreamCoder(IPacket packet) {
+    return mOCoders[packet.getStreamIndex()];
+  }
+
+  public IStream getStream(int index) {
+    return mOStreams[index];
+  }
+  public IStream getStream(IPacket packet) {
+    return mOStreams[packet.getStreamIndex()];
+  }
+
+  public boolean isStarted() {
+    return isStarted;
+  }
+  public boolean isDoneLoading() {
+    return isDoneLoading;
+  }
+  public boolean isDone() {
+    return isDone;
+  }
+}

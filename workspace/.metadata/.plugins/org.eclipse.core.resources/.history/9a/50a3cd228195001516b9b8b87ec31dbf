@@ -1,0 +1,12 @@
+package collage;
+
+public class RTSPPacket {
+  private int errorCode;
+  private int rtspSeqNum;
+  
+  public RTSPPacket(int errorCode, int rtspSeqNum) {
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+  }
+  
+}

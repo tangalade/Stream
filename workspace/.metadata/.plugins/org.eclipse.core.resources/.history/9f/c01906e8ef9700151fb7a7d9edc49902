@@ -1,0 +1,276 @@
+package collage;
+
+import java.io.*;
+import java.net.*;
+import java.text.ParseException;
+import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.Timer;
+
+import com.xuggle.xuggler.IStreamCoder;
+
+import collage.FakeDisp;
+import collage.IVideoPictureWrapper;
+import collage.MediaStream;
+import collage.RTPpacket;
+
+public class RTSPServer {
+  // Check 7.1.1 Status Codes
+  // RTSPServer
+  //  Requests
+  //    can be decoded entirely without a Session #
+  //    DESCRIBE: no new session, send response
+  //    OPTIONS: no new session, send response
+  //    SETUP: create new session, call handleRTRSPRequest on session
+  //    PLAY, PAUSE: call handleRTSPRequest on session, throw 454 error if no session
+  //    TEARDOWN: close existing session, or return error if session doesn't exist
+  //    default: throw 405 error
+  //  MediaStream
+  //    list of active MediaStream
+  //    controlled through a separate HTTP server
+  //    add new MediaStream in main() for testing
+  // RTSPServerSession
+  //  SETUP: attach to existing MediaStream
+  //  PLAY: send MediaStream packets
+  //  PAUSE: stop sending MediaStream packets
+  /* RTSP variables */
+  private int nextRTSPSessionNum = 0;
+  private Lock rtspSessionNumLock = new ReentrantLock();
+  private int rtspPort = 554;
+  private ServerSocket rtspSocket; // socket used to send/receive RTSP messages
+
+  private RTSPServerWorkerThread workerThread;
+  
+  private HashMap<String, MediaStream> streams;
+  private HashMap<Integer, RTSPServerSession> rtspSessions;
+  
+  final static String CRLF = "\r\n";
+
+  private boolean isClosed = false;
+  
+  private FakeDisp disp;
+  private FakeSpeaker speaker;
+
+  public RTSPServer(int rtspPort) throws IOException {
+    this.rtspPort = rtspPort;
+    setup();
+  }
+
+  public RTSPServer() throws IOException {
+    setup();
+  }
+
+  public void start() {
+    workerThread.start();
+  }
+
+  private void setup() throws IOException {
+    disp = new FakeDisp("Server",0,0,500,500);
+    workerThread = new RTSPServerWorkerThread();
+    rtspSocket = new ServerSocket(rtspPort);
+  }
+  private int nextSessionNum() {
+    for (;rtspSessions.containsKey(nextRTSPSessionNum); nextRTSPSessionNum++);
+    return nextRTSPSessionNum;
+  }
+  public void addMediaStream(String url, MediaStream stream) {
+    streams.put(url, stream);
+  }
+  
+  private class RTSPConnectionHandler extends Thread {
+    BufferedReader rtspReader = null;
+    BufferedWriter rtspWriter = null;
+    Socket clientSocket = null;
+    public RTSPConnectionHandler(Socket clientSocket) throws IOException {
+      this.clientSocket = clientSocket;
+      rtspReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()) );
+      rtspWriter = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()) );
+    }
+    public void run() {
+      RTSPRequestPacket request;
+      while (clientSocket.isConnected()) {
+        request = RTSPRequestPacket.make();
+        while (!request.isDone()) {
+          try {
+            request.decode(rtspReader);
+          } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("IOException: stopping connection");
+            return;
+          } catch (ParseException e) {
+            System.err.println("ParseException: dropping packet");
+            e.printStackTrace();
+            break;
+          }
+        }
+        if (request.isDone()) {
+          try {
+            handleRTSPRequest(request);
+          } catch (IOException e) {
+            System.err.println("Exception: dropping request");
+            e.printStackTrace();
+          }
+        }
+      }
+    }
+    private void handleRTSPRequest(RTSPRequestPacket request) throws IOException {
+      switch (request.reqType()) {
+      case OPTIONS:
+        handleOptions(request);
+        break;
+      case DESCRIBE:
+        handleDescribe(request);
+        break;
+      case SETUP:
+        handleSetup(request);
+        break;
+      case PLAY:
+      case PAUSE:
+        handlePlayPause(request);
+        break;
+      case TEARDOWN:
+        handleTeardown(request);
+        break;
+      default:
+        handleInvalidMethod(request);
+        break;
+      }
+    }
+    private void handleInvalidMethod(RTSPRequestPacket request) throws IOException {
+      RTSPResponsePacket response = null;
+      response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.INVALID_METHOD,
+          request.rtspSeqNum(), null);
+      if (response != null)
+        rtspWriter.write(response.rawData());
+    }
+    private void handleTeardown(RTSPRequestPacket request) throws IOException {
+      RTSPResponsePacket response = null;
+      if (request.sessionNum() == null) {
+        response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.BAD_REQUEST,
+            request.rtspSeqNum(), null);
+      } else {
+        if (!rtspSessions.containsKey(request.sessionNum())) {
+          response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.INVALID_SESSION,
+              request.rtspSeqNum(), null);
+        } else {
+          response = rtspSessions.get(request.sessionNum()).close();
+          rtspSessions.remove(request.sessionNum());
+        }
+      }
+      if (response != null)
+        rtspWriter.write(response.rawData());
+    }
+    private void handlePlayPause(RTSPRequestPacket request) throws IOException {
+      RTSPResponsePacket response = null;
+      if (request.sessionNum() == null) {
+        response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.BAD_REQUEST,
+            request.rtspSeqNum(), null);
+      } else {
+        if (!rtspSessions.containsKey(request.sessionNum())) {
+          response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.INVALID_SESSION,
+              request.rtspSeqNum(), null);
+        } else {
+          response = rtspSessions.get(request.sessionNum()).handleRTSPMessage(request);
+        }
+      }
+      if (response != null)
+        rtspWriter.write(response.rawData());
+    }
+    private void handleSetup(RTSPRequestPacket request) throws IOException {
+      RTSPResponsePacket response = null;
+      MediaStream stream;
+      if (request.sessionNum() == null) {
+        if (request.url() == null) {
+          response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.BAD_REQUEST,
+              request.rtspSeqNum(), null);
+        } else if (!streams.containsKey(request.url())) {
+          response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.NOT_FOUND,
+              request.rtspSeqNum(), null);
+        } else {
+          stream = streams.get(request.url());
+          try {
+            int sessionNum = nextSessionNum();
+            RTSPServerSession session = new RTSPServerSession(sessionNum, stream);
+            rtspSessions.put(sessionNum, session);
+            response = session.handleRTSPMessage(request);
+          } catch (SocketException e) {
+            response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.INTERNAL_ERROR,
+                request.rtspSeqNum(), null);
+            e.printStackTrace();
+          }
+        }
+      } else {
+        response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.INVALID_HEADER_FIELD,
+            request.rtspSeqNum(), null);
+        System.err.println("SETUP cannot be called twice on same session, not yet supported");
+      }
+      if (response != null)
+        rtspWriter.write(response.rawData());
+    }
+    private void handleDescribe(RTSPRequestPacket request) throws IllegalArgumentException, IOException {
+      RTSPResponsePacket response;
+      if (request.url() == null) {
+        response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.BAD_REQUEST,
+            request.rtspSeqNum(), null);
+      } else if (!streams.containsKey(request.url())) {
+        response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.NOT_FOUND,
+            request.rtspSeqNum(), null);
+      } else {
+        try {
+          response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ERROR_CODE_OK, 
+              request.rtspSeqNum(), null, streams.get(request.url()));
+        } catch (Exception e) {
+          response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.BAD_REQUEST,
+              request.rtspSeqNum(), null);
+        }
+      }
+      rtspWriter.write(response.rawData());
+    }
+    private void handleOptions(RTSPRequestPacket request) throws IOException {
+      RTSPResponsePacket response;
+      try {
+        response = RTSPResponsePacket.encode(RTSPPacket.Method.OPTIONS,
+            RTSPPacket.ERROR_CODE_OK, request.rtspSeqNum(), null);
+      } catch (Exception e) {
+        response = RTSPResponsePacket.encode(request.reqType(), RTSPPacket.ErrorCode.BAD_REQUEST,
+            request.rtspSeqNum(), null);
+      }
+      rtspWriter.write(response.rawData());
+    }
+  }
+  private class RTSPServerWorkerThread extends Thread {
+    public void run() {
+      Socket clientSocket = null;
+      while (!isClosed) {
+        try {
+          clientSocket = rtspSocket.accept();
+          if (clientSocket != null) {
+            Thread handler = new RTSPConnectionHandler(clientSocket);
+            handler.start();
+          }
+        } catch (IOException e) {
+          e.printStackTrace();
+          return;
+        }
+      }
+    }
+  }
+  
+  //------------------------------------
+  //main
+  //------------------------------------
+  public static void main(String argv[]) throws Exception
+  {
+    RTSPServer server = new RTSPServer();
+//    server.addMediaStream(url, stream);
+    server.start();
+  }
+}

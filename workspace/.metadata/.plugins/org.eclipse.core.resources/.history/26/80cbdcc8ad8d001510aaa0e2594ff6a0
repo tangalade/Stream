@@ -1,0 +1,252 @@
+package collage;
+
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+import javax.imageio.ImageIO;
+import javax.sound.sampled.LineUnavailableException;
+
+import com.xuggle.xuggler.Global;
+import com.xuggle.xuggler.IAudioSamples;
+import com.xuggle.xuggler.ICodec;
+import com.xuggle.xuggler.IMetaData;
+import com.xuggle.xuggler.IPacket;
+import com.xuggle.xuggler.IStreamCoder;
+import com.xuggle.xuggler.IVideoPicture;
+import com.xuggle.xuggler.video.ConverterFactory;
+import com.xuggle.xuggler.video.IConverter;
+
+public class MediaStream
+{
+  String OFFLINE_URL = "img/offline.jpg";
+  private BufferedImage offlineImage;
+  private IPacket offlinePacket;
+
+  private Queue<BufferedInputPacketStream> streams = new LinkedList<BufferedInputPacketStream>();
+  private List<IPacket> packetBuf = new LinkedList<IPacket>();
+  
+  int frameNum = 0;
+  long streamStartTimestamp;
+  long curTimestamp = 0;
+  private CollageGlobal.QUALITY quality = CollageGlobal.QUALITY.MEDIUM;
+  
+  private int inVideoStreamId = -1;
+  private int inAudioStreamId = -1;
+  private int outVideoStreamId = 0;
+  private int outAudioStreamId = 1;
+  
+  private IStreamCoder videoCoder;
+  private IStreamCoder audioCoder;
+  
+  private static long mFirstVideoTimestampInStream = Global.NO_PTS;
+  private static long mSystemVideoClockStartTime = 0;
+  
+  static FakeDisp serverDisp;
+  static FakeSpeaker serverSpeaker;
+  
+  public MediaStream() {
+    if (!setupAudio())
+      throw new RuntimeException("Failed to setup audio");
+    if (!setupVideo())
+      throw new RuntimeException("Failed to setup video");
+
+    try {
+      offlineImage = ImageIO.read(new File(OFFLINE_URL));
+    } catch (IOException e) {
+      System.err.println("Couldn't load offline image: " + OFFLINE_URL);
+    }
+    offlinePacket = IPacket.make();
+    IConverter converter = ConverterFactory.createConverter(ConverterFactory.findDescriptor(offlineImage), videoCoder.getPixelType(), videoCoder.getWidth(), videoCoder.getHeight());
+    IVideoPicture offlinePic = converter.toPicture(offlineImage, curTimestamp);
+    if (offlinePic.isComplete()) {
+      videoCoder.encodeVideo(offlinePacket, offlinePic, -1);
+      serverDisp.updateFull(offlineImage);
+    }
+  }
+  
+  private boolean setupVideo() {
+    ICodec codec = ICodec.findEncodingCodec(CollageGlobal.videoCodecID);
+    videoCoder = IStreamCoder.make(IStreamCoder.Direction.ENCODING, codec);
+    if (videoCoder == null)
+      return false;
+    videoCoder.setWidth(quality.width());
+    videoCoder.setHeight(quality.height());
+    videoCoder.setPixelType(CollageGlobal.videoPixelFormatType);
+    videoCoder.setTimeBase(CollageGlobal.videoTimeBase);
+    if (videoCoder.open(IMetaData.make(), IMetaData.make()) < 0)
+      System.err.println("Error opening video coder");
+    
+    serverDisp = new FakeDisp("Server", 0, 0, videoCoder.getWidth(), videoCoder.getHeight());
+    serverDisp.setRelative(false);
+    return true;
+  }
+  private boolean setupAudio() {
+    audioCoder = IStreamCoder.make(IStreamCoder.Direction.ENCODING, ICodec.findEncodingCodec(ICodec.ID.CODEC_ID_MP3));
+    if (audioCoder == null)
+      return false;
+    audioCoder.setSampleRate(new Integer(44100));
+    audioCoder.setChannels(2);
+    if (audioCoder.open(IMetaData.make(), IMetaData.make()) < 0)
+      System.err.println("Error opening audio coder");
+    
+    try {
+      serverSpeaker = new FakeSpeaker(
+          audioCoder.getSampleRate(), 
+          (int)IAudioSamples.findSampleBitDepth(audioCoder.getSampleFormat()),
+          audioCoder.getChannels());
+    } catch (LineUnavailableException e) {
+      return false;
+    }
+    return true;
+  }
+  
+  public void queueStream(BufferedInputPacketStream stream) {
+	  streams.add(stream);
+	  streamStartTimestamp = System.currentTimeMillis();
+	  streams.peek().start();
+  }
+  
+  public static void main(String[] argv) throws Exception {
+	  if (argv.length <= 0)
+	      throw new IllegalArgumentException("must pass in a filename as the first argument");
+	  
+	  String filename = argv[0];
+	  MediaStream mediaStream = new MediaStream();
+	  InputPacketStream inputStream = new BufferedInputPacketStream(filename);
+	  mediaStream.queueStream(inputStream);
+	  
+	  IVideoPicture picture = null;
+	  IAudioSamples samples = null;
+	  while (!mediaStream.isDone()) {
+	    long frameStart = System.currentTimeMillis();
+      System.out.println((System.currentTimeMillis()-frameStart) + " ms to A");
+      IPacket packet = mediaStream.getNextPacket();
+      IStreamCoder coder = mediaStream.getActiveInputStream().getStreamCoder(packet);
+//      List<IPacket> modPackets = mediaStream.modifier.processPacket(packet, coder);
+      List<IPacket> modPackets = new LinkedList<IPacket>();
+      modPackets.add(packet);
+      while(!modPackets.isEmpty()) {
+        packet = modPackets.remove(0);
+        if (packet.getStreamIndex() == mediaStream.outVideoStreamId) {
+          if (picture == null)
+            picture = IVideoPicture.make(coder.getPixelType(), coder.getWidth(), coder.getHeight());
+          IConverter converter = ConverterFactory.createConverter(
+              ConverterFactory.XUGGLER_BGR_24, coder.getPixelType(), coder.getWidth(), coder.getHeight());
+  
+          System.out.println((System.currentTimeMillis()-frameStart) + " ms to B");
+          coder.decodeVideo(picture, packet, 0);
+          System.out.println((System.currentTimeMillis()-frameStart) + " ms to C");
+          if (picture.isComplete()) {
+            BufferedImage nextImg = converter.toImage(picture);
+            serverDisp.updateFull(nextImg);
+            long delay = millisecondsUntilTimeToDisplay(picture);
+            try {
+              if (delay > 0)
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+              return;
+            }
+            picture = null;
+          }
+          System.out.println((System.currentTimeMillis()-frameStart) + " ms to D");
+        } else if (packet.getStreamIndex() == mediaStream.outAudioStreamId) {
+          samples = IAudioSamples.make(1024, coder.getChannels());
+          int offset = 0;
+          while(offset < packet.getSize())
+          {
+            int bytesDecoded = coder.decodeAudio(samples, packet, offset);
+            if (bytesDecoded < 0)
+              throw new RuntimeException("got error decoding audio in: " + filename);
+            offset += bytesDecoded;
+            if (samples.isComplete())
+              serverSpeaker.play(samples);
+          }
+        }
+      }
+      // --------------------
+      // Client 
+      // --------------------
+//      System.out.println((System.currentTimeMillis()-frameStart) + " ms to H");
+//      ByteArrayInputStream clientIn = new ByteArrayInputStream(nextPic.byteArray());
+//      BufferedImage clientImage = ImageIO.read(clientIn);
+//      stream.clientDisp.updateFull(clientImage);
+  }
+	  
+  }
+
+  public boolean isDone() {
+    return getActiveInputStream() == null;
+  }
+  private BufferedInputPacketStream getActiveInputStream() {
+    while (streams.peek().isDone()) {
+      streams.remove();
+      if (streams.isEmpty())
+        return null;
+      if (!streams.peek().isDone())
+        streams.peek().start();
+      streamStartTimestamp = System.currentTimeMillis();
+    };
+    return streams.peek();
+  }
+
+  public IPacket getNextPacket() {
+    if (!packetBuf.isEmpty())
+      return packetBuf.remove(0);
+    BufferedInputPacketStream stream = getActiveInputStream();
+    if (stream == null)
+      return null;
+    IPacket packet;
+    IStreamCoder coder;
+    while (true) {
+      packet = stream.getNextPacket();
+      if (packet == null)
+        return null;
+      coder = stream.getStreamCoder(packet);
+      if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_AUDIO) {
+        if (inAudioStreamId == -1)
+          inAudioStreamId = packet.getStreamIndex();
+        else if (inAudioStreamId != packet.getStreamIndex())
+          continue;
+      } else if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_VIDEO) {
+        if (inVideoStreamId == -1)
+          inVideoStreamId = packet.getStreamIndex();
+        else if (inVideoStreamId != packet.getStreamIndex())
+          continue;
+      }
+      break;
+    }
+//    List<IPacket> modPackets = modifier.processPacket(packet, coder);
+//    packetBuf.addAll(modPackets);
+    packetBuf.add(packet);
+    return packetBuf.remove(0);
+  }
+  
+  private static long millisecondsUntilTimeToDisplay(IVideoPicture picture)
+  {
+    long millisecondsToSleep = 0;
+    if (mFirstVideoTimestampInStream == Global.NO_PTS)
+    {
+      // This is our first time through
+      mFirstVideoTimestampInStream = picture.getTimeStamp();
+      // get the starting clock time so we can hold up frames
+      // until the right time.
+      mSystemVideoClockStartTime = System.currentTimeMillis();
+      millisecondsToSleep = 0;
+    } else {
+      long systemClockCurrentTime = System.currentTimeMillis();
+      long millisecondsClockTimeSinceStartofVideo = systemClockCurrentTime - mSystemVideoClockStartTime;
+      // compute how long for this frame since the first frame in the stream.
+      // remember that IVideoPicture and IAudioSamples timestamps are always in MICROSECONDS,
+      // so we divide by 1000 to get milliseconds.
+      long millisecondsStreamTimeSinceStartOfVideo = (picture.getTimeStamp() - mFirstVideoTimestampInStream)/1000;
+      final long millisecondsTolerance = 10; // and we give ourselfs 50 ms of tolerance
+      millisecondsToSleep = (millisecondsStreamTimeSinceStartOfVideo -
+          (millisecondsClockTimeSinceStartofVideo+millisecondsTolerance));
+    }
+    return millisecondsToSleep;
+  }
+}

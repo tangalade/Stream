@@ -1,0 +1,66 @@
+package collage;
+
+import com.xuggle.xuggler.IPacket;
+import com.xuggle.xuggler.IStream;
+import com.xuggle.xuggler.IStreamCoder;
+
+public abstract class InputPacketStream {
+
+  public abstract void start();
+  
+  public IPacket tryNextPacket() {
+    if (isDone)
+      return null;
+    IPacket ret = packets.poll();
+    if (packets.isEmpty() && isDoneLoading)
+      cleanup();
+    return ret;
+  }
+  
+  public IPacket getNextPacket() {
+    if (isDone || (packets.isEmpty() && isDoneLoading))
+      return null;
+    IPacket ret = null;
+    try {
+      ret = packets.take();
+      if (packets.isEmpty() && isDoneLoading)
+        cleanup();
+    } catch (InterruptedException e) {
+      System.err.println("Interrupted while getting next packet");
+      e.printStackTrace();
+    }
+    return ret;
+  }
+
+  public abstract int getMaxBufferSize();
+  public int getNumStreams() {
+    return streams.length;
+  }
+  public float getFullness() {
+    return packets.size()/maxBufferSize*100;
+  }
+  
+  public IStreamCoder getStreamCoder(int index) {
+    return coders[index];
+  }
+  public IStreamCoder getStreamCoder(IPacket packet) {
+    return coders[packet.getStreamIndex()];
+  }
+
+  public IStream getStream(int index) {
+    return streams[index];
+  }
+  public IStream getStream(IPacket packet) {
+    return streams[packet.getStreamIndex()];
+  }
+  
+  public boolean isStarted() {
+    return isStarted;
+  }
+  public boolean isDoneLoading() {
+    return isDoneLoading;
+  }
+  public boolean isDone() {
+    return isDone;
+  }
+}

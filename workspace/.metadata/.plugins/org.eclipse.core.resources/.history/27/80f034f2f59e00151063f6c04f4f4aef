@@ -1,0 +1,71 @@
+package collage;
+
+public abstract class RTSPPacket {
+  public static String CHAR_ENCODING = "UTF-8";
+  public static enum Method {
+    OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE
+  }
+  public static enum TransportProtocol {
+    RTP
+  }
+  public static enum TransportMode {
+    MULTICAST ("Multicast");
+    private final String rtspName;
+    TransportMode(String rtspName) {
+      this.rtspName = rtspName;
+    }
+    public String rtspName() { return rtspName; }
+  }
+  public static enum ErrorCode {
+    OK(200, "OK"),
+    BAD_REQUEST(400, "Bad Request"),
+    NOT_FOUND(404, "Not Found"),
+    INVALID_METHOD(405, "Method Not Allowed"),
+    INVALID_SESSION(454, "Session Not Found"),
+    INVALID_METHOD_IN_STATE(455, "Method Not Valid in This State"),
+    INVALID_HEADER_FIELD(456, "Header Field Not in This State"),
+    INTERNAL_ERROR(500, "Internal Server Error");
+    
+    private final int code;
+    private final String description;
+    
+    ErrorCode(int code, String description) {
+      this.code = code;
+      this.description = description;
+    }
+    public int code() { return code; }
+    public String description() { return description; }
+    public static ErrorCode parse(String code) {
+      switch (code) {
+      case "200":
+        return OK;
+      case "400":
+        return BAD_REQUEST;
+      case "404":
+        return NOT_FOUND;
+      case "405":
+        return INVALID_METHOD;
+      case "454":
+        return INVALID_SESSION;
+      case "456":
+        return INVALID_HEADER_FIELD;
+      case "500":
+        return INTERNAL_ERROR;
+      default:
+        throw new IllegalArgumentException("Unknown error code: " + code);
+      }
+    }
+    public String toString() {
+      return code + " " + description;
+    }
+  }
+  public abstract boolean equals(Object obj);
+  public abstract int hashCode();
+  public static final ErrorCode ERROR_CODE_OK = ErrorCode.OK;
+  public static final String RTSP_VERSION = "RTSP/1.0";
+  public static final Method[] DEFAULT_OPTIONS =
+    {Method.DESCRIBE, Method.SETUP, Method.TEARDOWN, Method.PLAY, Method.PAUSE};
+  public static final TransportProtocol DEFAULT_TRANSPORT_PROTOCOL = TransportProtocol.RTP;
+  public static final TransportMode DEFAULT_TRANSPORT_MODE = TransportMode.MULTICAST;
+  protected final static String CRLF = "\r\n";
+}

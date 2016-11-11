@@ -1,0 +1,163 @@
+package collage;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+
+import com.xuggle.xuggler.IAudioResampler;
+import com.xuggle.xuggler.IAudioSamples;
+import com.xuggle.xuggler.ICodec;
+import com.xuggle.xuggler.ICodec.Type;
+import com.xuggle.xuggler.IPacket;
+import com.xuggle.xuggler.IStream;
+import com.xuggle.xuggler.IStreamCoder;
+import com.xuggle.xuggler.IVideoPicture;
+import com.xuggle.xuggler.IVideoResampler;
+
+public class Modifier {
+
+  private BlockingQueue<IPacket> packets;
+  
+  private InputPacketStream pStream = null;
+  private IStreamCoder aOCoder = null;
+  private IStreamCoder vOCoder = null;
+  private IStream[] mIStreams = null;
+  private IStreamCoder[] mICoders = null;
+  private IStreamCoder[] mOCoders = null;
+  private IAudioResampler[] mASamplers = null;
+  private IVideoResampler[] mVSamplers = null;
+  private IVideoPicture[] mIVideoPictures = null;
+  private IVideoPicture[] mOVideoPictures = null;
+  private IAudioSamples[] mISamples = null;
+  private IAudioSamples[] mOSamples = null;
+  
+  IVideoResampler resampler = null;
+
+  public Modifier(InputPacketStream inStream, IStreamCoder aOCoder, IStreamCoder vOCoder) {
+    this.aOCoder = aOCoder;
+    this.vOCoder = vOCoder;
+    setupStreams();
+  }
+  
+  private void setupStreams() {
+    int numStreams = pStream.getNumStreams();
+    
+    mIStreams = new IStream[numStreams];
+    mICoders = new IStreamCoder[numStreams];
+    mOCoders = new IStreamCoder[numStreams];
+    mASamplers = new IAudioResampler[numStreams];
+    mVSamplers = new IVideoResampler[numStreams];
+    mIVideoPictures = new IVideoPicture[numStreams];
+    mOVideoPictures = new IVideoPicture[numStreams];
+    mISamples = new IAudioSamples[numStreams];
+    mOSamples = new IAudioSamples[numStreams];
+    
+    for (int i=0; i<numStreams; i++) {
+      IStream is = pStream.getStream(i);
+      IStreamCoder ic= is.getStreamCoder();
+      ICodec.Type cType = ic.getCodecType();
+      
+      mIStreams[i] = is;
+      mICoders[i] = ic;
+      mOCoders[i] = null;
+      mASamplers[i] = null;
+      mVSamplers[i] = null;
+      mIVideoPictures[i] = null;
+      mOVideoPictures[i] = null;
+      mISamples[i] = null;
+      mOSamples[i] = null;
+      
+      if (cType == ICodec.Type.CODEC_TYPE_AUDIO) {
+        IStreamCoder oc = aOCoder;
+        mOCoders[i] = aOCoder;
+      }
+    }
+  }
+  
+  // A transformed audio packet could result in more than one packet 
+  public List<IPacket> processPacket(IPacket packet, IStreamCoder inCoder) {
+    List<IPacket> out = new LinkedList<IPacket>();
+
+    if (inCoder.getCodecType() == ICodec.Type.CODEC_TYPE_AUDIO)
+      return processAudioPacket(packet, inCoder);
+    else if (inCoder.getCodecType() == ICodec.Type.CODEC_TYPE_VIDEO)
+      return processVideoPacket(packet, inCoder);
+
+    return out;
+  }
+
+  private List<IPacket> processVideoPacket(IPacket packet, IStreamCoder inCoder) {
+    List<IPacket> out = new LinkedList<IPacket>();
+    IPacket tmpPacket;
+    int offset = 0;
+    int numEncoded = 0, bytesDecoded = 0;
+    IVideoPicture outFrame = null;
+    IVideoPicture resFrame = IVideoPicture.make(vOCoder.getPixelType(),
+        vOCoder.getWidth(), vOCoder.getHeight());
+    IVideoPicture inFrame = IVideoPicture.make(inCoder.getPixelType(),
+        inCoder.getWidth(), inCoder.getHeight());
+    tmpPacket = IPacket.make();
+    while (offset < packet.getSize()) {
+      bytesDecoded = inCoder.decodeVideo(inFrame, packet, 0);
+      if (bytesDecoded <= 0)
+        throw new RuntimeException("Error decoding video packet");
+      offset += bytesDecoded;
+      
+      if (inFrame.isComplete()) {
+        if ( vOCoder.getWidth() != inCoder.getWidth() ||
+            vOCoder.getHeight() != inCoder.getHeight() ||
+            vOCoder.getPixelType() != inCoder.getPixelType() ) {
+          resampler = IVideoResampler.make(
+              vOCoder.getWidth(), vOCoder.getHeight(), vOCoder.getPixelType(),
+              inCoder.getWidth(), inCoder.getHeight(), inCoder.getPixelType());
+          if (resampler == null)
+            throw new RuntimeException("Could not create resampler for video packet");
+          if (resampler.resample(resFrame, inFrame) < 0)
+            throw new RuntimeException("could not resample video packet");
+          outFrame = resFrame;
+        } else {
+          outFrame = inFrame;
+        }
+      }
+      numEncoded = vOCoder.encodeVideo(tmpPacket, outFrame, -1);
+      if (numEncoded < 0)
+        throw new RuntimeException("Error encoding video");
+      out.add(tmpPacket);
+    }
+    return out;
+  }
+  private List<IPacket> processAudioPacket(IPacket packet, IStreamCoder inCoder) {
+    List<IPacket> out = new LinkedList<IPacket>();
+    IPacket tmpPacket = IPacket.make();
+    int samplesEncoded = 0, bytesDecoded = 0;
+    if (inCoder.getCodecType() != ICodec.Type.CODEC_TYPE_AUDIO)
+      return out;
+
+    IAudioSamples samples = IAudioSamples.make(1024, inCoder.getChannels());
+    int offset = 0, lastPos = 0;
+    // continuously call decodeAudio until all samples have been decoded
+    while(offset < packet.getSize()) {
+      tmpPacket = IPacket.make();
+      bytesDecoded = inCoder.decodeAudio(samples, packet, offset);
+      if (bytesDecoded < 0)
+        throw new RuntimeException("Error decoding audio packet");
+      offset += bytesDecoded;
+      if (samples.isComplete()) {
+        int samplesConsumed = 0;
+        // continuously call encodeAudio in case the samples must be in more than one packet
+        while (samplesConsumed < samples.getNumSamples()) {
+          samplesEncoded = aOCoder.encodeAudio(tmpPacket, samples, samplesConsumed);
+          if (samplesEncoded <= 0)
+            throw new RuntimeException("Error encoding audio");
+          samplesConsumed += samplesEncoded;
+          if (tmpPacket.isComplete()) {
+            tmpPacket.setPosition(lastPos);
+            lastPos += tmpPacket.getSize();
+            out.add(tmpPacket);
+          }
+        }
+      }
+    }
+    return out;
+  }
+}

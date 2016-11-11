@@ -1,0 +1,256 @@
+package collage;
+
+import com.xuggle.xuggler.IStreamCoder;
+
+public class RTSPResponsePacket extends RTSPPacket {
+  private ErrorCode errorCode = null;
+  private Integer rtspSeqNum = null;
+  private Integer sessionNum = null;
+  private Method reqType = null;
+  private String data = null;
+
+  // OPTIONS
+  private Method[] supportedMethods = {Method.DESCRIBE, Method.SETUP, Method.TEARDOWN, Method.PLAY, Method.PAUSE};
+  // DESCRIBE
+  private IStreamCoder audioCoder;
+  private IStreamCoder videoCoder;
+  private int aStreamIndex;
+  private int vStreamIndex;
+  
+  public RTSPResponsePacket(Method reqType, ErrorCode errorCode, Integer rtspSeqNum, Integer sessionNum) throws IllegalArgumentException {
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.sessionNum = sessionNum;
+    encode();
+  }
+  public RTSPResponsePacket(Method reqType, ErrorCode errorCode, Integer rtspSeqNum, Integer sessionNum,
+      Method[] supportedMethods) throws IllegalArgumentException {
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.sessionNum = sessionNum;
+    this.supportedMethods = supportedMethods;
+    encode();
+  }
+  public RTSPResponsePacket(Method reqType, ErrorCode errorCode, Integer rtspSeqNum, Integer sessionNum,
+      MediaStream mediaStream) throws IllegalArgumentException { 
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.sessionNum = sessionNum;
+    if (mediaStream == null)
+      throw new IllegalArgumentException("null mediaStream");
+    this.audioCoder = mediaStream.getAudioDecoder();
+    this.videoCoder = mediaStream.getVideoDecoder();
+    this.aStreamIndex = mediaStream.getAudioStreamId();
+    this.vStreamIndex = mediaStream.getVideoStreamId();
+    encode();
+  }
+  public RTSPResponsePacket(Method reqType, ErrorCode errorCode, Integer rtspSeqNum, Integer sessionNum,
+      IStreamCoder audioCoder, IStreamCoder videoCoder,
+      int aStreamIndex, int vStreamIndex) throws IllegalArgumentException { 
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.sessionNum = sessionNum;
+    this.audioCoder = audioCoder;
+    this.videoCoder = videoCoder;
+    this.aStreamIndex = aStreamIndex;
+    this.vStreamIndex = aStreamIndex;
+    encode();
+  }
+  
+  private void decodeStatus(String line) {
+    String[] tokens = line.split("\\s+");
+    if (tokens.length != 3)
+      throw new IllegalArgumentException("Invalid status line: " + line);
+
+    if (tokens[0] != RTSP_VERSION)
+      throw new IllegalArgumentException("Unsupported RTSP Version: " + tokens[2]);
+    errorCode = new ErrorCode(Integer.parseInt(tokens[1]), tokens[2]);
+  }
+  private void decodeSeqNum(String line) {
+    String[] tokens = line.split("\\s+");
+    if (tokens.length != 2)
+      throw new IllegalArgumentException("Invalid sequence num line: " + line);
+    
+    try {
+      rtspSeqNum = Integer.parseInt(tokens[1]);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid sequence num: " + tokens[1]);
+    }
+  }
+  private void decodeSessionNum(String line) {
+    String[] tokens = line.split("\\s+");
+    if (tokens.length != 2)
+      throw new IllegalArgumentException("Invalid session num line: " + line);
+    
+    try {
+      sessionNum = Integer.parseInt(tokens[1]);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid session num: " + tokens[1]);
+    }
+  }
+  private void decodeContent(String content) {
+    switch (reqType) {
+    case "OPTIONS":
+      content += "Public: ";
+      if (supportedMethods.length > 0) {
+        for (int i=0; i<supportedMethods.length-1; i++)
+          content += supportedMethods[i].toString() + ", ";
+        content += supportedMethods[supportedMethods.length-1].toString();
+      }
+      break;
+      break;
+    case "DESCRIBE":
+      break;
+    default:
+      break;
+    };
+    ICodec.ID aCodecID = null;
+      Integer aSampleRate = null;
+      Integer aChannels = null;
+      Integer aStreamIndex = null;
+      ICodec.ID vCodecID = null;
+      Integer vWidth = null;
+      Integer vHeight = null;
+      IPixelFormat.Type vPixelType = null;
+      IRational vTimeBase = null;
+      Integer vStreamIndex = null;
+      String[] params = pair[1].trim().split(";");
+      for (int i=0; i<params.length; i++) {
+        String[] paramPair = params[i].split("=");
+        if (paramPair.length != 2)
+          throw new RuntimeException("Invalid param in SETUP response: " + params[i]);
+        switch(paramPair[0]) {
+        case "aCodecID":
+          aCodecID = ICodec.ID.swigToEnum(Integer.parseInt(paramPair[1]));
+          break;
+        case "aSampleRate":
+          aSampleRate = Integer.parseInt(paramPair[1]);
+          break;
+        case "aChannels":
+          aChannels = Integer.parseInt(paramPair[1]);
+          break;
+        case "aStreamIndex":
+          aStreamIndex = Integer.parseInt(paramPair[1]);
+          break;
+        case "vCodecID":
+          vCodecID = ICodec.ID.swigToEnum(Integer.parseInt(paramPair[1]));
+          break;
+        case "vWidth":
+          vWidth = Integer.parseInt(paramPair[1]);
+          break;
+        case "vHeight":
+          vHeight = Integer.parseInt(paramPair[1]);
+          break;
+        case "vPixelType":
+          vPixelType = IPixelFormat.Type.swigToEnum(Integer.parseInt(paramPair[1]));
+          break;
+        case "vTimeBase":
+          vTimeBase = IRational.make(Double.parseDouble(paramPair[1]));
+          break;
+        case "vStreamIndex":
+          vStreamIndex = Integer.parseInt(paramPair[1]);
+          break;
+        default:
+          throw new RuntimeException("Invalid param in SETUP response: " + paramPair[0]);
+        }
+      }
+      if ((aCodecID == null)  || (aSampleRate == null) ||
+          (aChannels == null) || (aStreamIndex == null) ||
+          (vCodecID == null)  || (vWidth == null) ||
+          (vHeight == null)   || (vPixelType == null) ||
+          (vTimeBase == null)) {
+        throw new RuntimeException("Missing some parameters in SETUP response");
+      }
+      audioCoder = IStreamCoder.make(IStreamCoder.Direction.DECODING, aCodecID);
+      audioCoder.setSampleRate(aSampleRate);
+      audioCoder.setChannels(aChannels);
+      if (audioCoder.open(null, null) < 0)
+        throw new RuntimeException("Failed to open audio coder");
+      this.audioStreamIndex = aStreamIndex; 
+      videoCoder = IStreamCoder.make(IStreamCoder.Direction.DECODING, vCodecID);
+      videoCoder.setWidth(vWidth);
+      videoCoder.setHeight(vHeight);
+      videoCoder.setPixelType(vPixelType);
+      videoCoder.setTimeBase(vTimeBase);
+      if (videoCoder.open(null, null) < 0)
+        throw new RuntimeException("Failed to open video coder");
+      this.videoStreamIndex = vStreamIndex;
+    
+  }
+  
+  private String encodeStatus() {
+    return RTSP_VERSION + " " + errorCode.code() + " " + errorCode.description() + CRLF;
+  }
+  private String encodeSeqNum() {
+    return "CSeq: " + rtspSeqNum + CRLF;
+  }
+  private String encodeSessionNum() {
+    String ret = "";
+    if (sessionNum != null)
+      ret = "Session: " + sessionNum + CRLF;
+    return ret;
+  }
+  private String encodePublic() {
+    String pub = "";
+    switch (reqType) {
+    case OPTIONS:
+      pub += "Public: ";
+      if (supportedMethods.length > 0) {
+        for (int i=0; i<supportedMethods.length-1; i++)
+          pub += supportedMethods[i].toString() + ", ";
+        pub += supportedMethods[supportedMethods.length-1].toString();
+      }
+      break;
+    default:
+      break;
+    }
+    return pub;
+  }
+  private String encodeContent() {
+    String all = "";
+    String content = "";
+    int contentLength = 0;
+    switch (reqType) {
+    case DESCRIBE:
+      if (audioCoder != null && aStreamIndex != -1) {
+        content += "aStreamIndex=" + aStreamIndex;
+        content += "aCodecId="     + audioCoder.getCodecID().swigValue();
+        content += "aSampleRate="  + audioCoder.getSampleRate();
+        content += "aChannels="    + audioCoder.getChannels();
+      };
+      if (videoCoder != null && vStreamIndex != -1) {
+        content += "vStreamIndex=" + vStreamIndex;
+        content += "vCodecId="     + videoCoder.getCodecID().swigValue();
+        content += "vWidth="       + videoCoder.getWidth();
+        content += "vHeight="      + videoCoder.getHeight();
+        content += "vPixelType="   + videoCoder.getPixelType().swigValue();
+        content += "vTimeBase="    + videoCoder.getTimeBase().getValue();
+      }
+      break;
+    default:
+      break;
+    }
+    contentLength += content.length();
+    if (contentLength > 0) {
+      all += "Content-Length: " + contentLength + CRLF;
+      all += CRLF;
+      all += content + CRLF;
+    }
+    return all;
+  }
+  private void encode() {
+    String encodedPacket = "";
+    encodedPacket += encodeStatus();
+    encodedPacket += encodeSeqNum();
+    encodedPacket += encodeSessionNum();
+    encodedPacket += encodePublic();
+    encodedPacket += encodeContent();
+    
+    this.data = encodedPacket;
+  }
+
+}

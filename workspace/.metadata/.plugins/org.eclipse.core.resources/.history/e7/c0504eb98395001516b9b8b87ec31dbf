@@ -1,0 +1,40 @@
+package collage;
+
+public class RTSPResponsePacket {
+  public static enum REQUEST {
+    OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE
+  }
+  public static final int ERROR_CODE_OK = 200;
+  private final String CRLF = "\r\n";
+
+  private int errorCode;
+  private int rtspSeqNum;
+  private REQUEST reqType;
+  private String packet;
+  
+  public RTSPResponsePacket(REQUEST reqType, int errorCode, int rtspSeqNum) {
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+  }
+  
+  private String encodeStatus() {
+    return "RTSP/1.0 " + errorCode + " OK";
+  }
+  private String encodeSeqNum() {
+    return "CSeq: " + rtspSeqNum;
+  }
+  public encode() {
+    String 
+    switch (reqType) {
+    case OPTIONS:
+      
+    }
+  }
+
+  public static class OPTIONS {
+    public OPTIONS(int errorCode, int rtspSeqNum) {
+      
+    }
+  }
+}

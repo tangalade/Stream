@@ -1,0 +1,23 @@
+package collage;
+
+public abstract class RTSPPacket {
+  public static enum Request {
+    OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE
+  }
+  public static enum ErrorCode {
+    OK (200, "OK");
+    
+    private final int code;
+    private final String desc;
+    ErrorCode(int code, String desc) {
+      this.code = code;
+      this.desc = desc;
+    }
+    public int code() { return code; }
+    public String desc() { return desc; }
+  }
+  public static final ErrorCode ERROR_CODE_OK = OK;
+  public static final String RTSP_VERSION = "RTSP/1.0";
+
+  protected final String CRLF = "\r\n";
+}

@@ -1,0 +1,93 @@
+package collage;
+
+import com.xuggle.xuggler.IStreamCoder;
+
+public class RTSPRequestPacket extends RTSPPacket {
+  private Request reqType = null;
+  private Integer rtspSeqNum = null;
+  private Integer sessionNum = null;
+  private String url = null;
+
+  private String data = null;
+  
+  public RTSPRequestPacket encode(Request reqType, String url, Integer rtspSeqNum, Integer sessionNum) throws IllegalArgumentException {
+    RTSPRequestPacket packet = new RTSPRequestPacket();
+    packet.reqType = reqType;
+    packet.rtspSeqNum = rtspSeqNum;
+    packet.sessionNum = sessionNum;
+    packet.url = url;
+    
+    packet.encode();
+    
+    return packet;
+  }
+  public RTSPRequestPacket(String data) {
+    this.data = data;
+    decode();
+  }
+  
+  private RTSPRequestPacket() {}
+  
+  private void decode() {
+    
+  }
+  
+  private String encodeMethod() {
+    return reqType.toString() + " " + url + " " + RTSP_VERSION + CRLF;
+  }
+  private String encodeSeqNum() {
+    return "CSeq: " + rtspSeqNum + CRLF;
+  }
+  private String encodeSessionNum() {
+    String ret = "";
+    if (sessionNum != null)
+      ret = "Session: " + sessionNum + CRLF;
+    return ret;
+  }
+  private void encode() {
+    String encodedPacket = "";
+    encodedPacket += encodeMethod();
+    encodedPacket += encodeSeqNum();
+    encodedPacket += encodeSessionNum();
+    this.data = encodedPacket;
+  }
+  
+  public String toString() {
+    return data;
+  }
+
+  public Request reqType() {
+    return reqType;
+  }
+  public void setReqType(Request reqType) {
+    this.reqType = reqType;
+  }
+
+  public Integer rtspSeqNum() {
+    return rtspSeqNum;
+  }
+  public void setRtspSeqNum(Integer rtspSeqNum) {
+    this.rtspSeqNum = rtspSeqNum;
+  }
+
+  public Integer sessionNum() {
+    return sessionNum;
+  }
+  public void setSessionNum(Integer sessionNum) {
+    this.sessionNum = sessionNum;
+  }
+
+  public String url() {
+    return url;
+  }
+  public void setUrl(String url) {
+    this.url = url;
+  }
+
+  public String data() {
+    return data;
+  }
+  public void setData(String data) {
+    this.data = data;
+  }
+}

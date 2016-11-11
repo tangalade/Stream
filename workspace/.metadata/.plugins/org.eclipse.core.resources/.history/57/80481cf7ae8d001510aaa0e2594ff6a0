@@ -1,0 +1,168 @@
+package collage;
+
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.Queue;
+
+import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
+
+import com.xuggle.xuggler.Global;
+import com.xuggle.xuggler.IAudioSamples;
+import com.xuggle.xuggler.IStreamCoder;
+import com.xuggle.xuggler.IVideoPicture;
+
+public class MediaStreamBackup
+{
+  String OFFLINE_URL = "img/offline.jpg";
+  Queue<InputMediaStream> streams = new LinkedList<InputMediaStream>();
+  
+  BufferedImage offlineImage;
+  IVideoPictureWrapper offlinePic;
+  
+  int frameNum = 0;
+  long streamStartTimestamp;
+
+  private static long mFirstVideoTimestampInStream = Global.NO_PTS;
+  private static long mSystemVideoClockStartTime = 0;
+  
+  FakeDisp serverDisp = new FakeDisp(0, 0, 500, 500);
+//  FakeDisp clientDisp = new FakeDisp(0, 0, 500, 500);
+  private SourceDataLine mLine;
+  
+  public MediaStreamBackup() {
+    try {
+      offlineImage = ImageIO.read(new File(OFFLINE_URL));
+    } catch (IOException e) {
+      throw new RuntimeException("Couldn't load offline image");
+    }
+    offlinePic = new IVideoPictureWrapper(offlineImage);
+    serverDisp.updateFull(offlineImage);
+  }
+  
+  private boolean setupAudio() {
+    if (getActiveInputStream() == null)
+      return false;
+    IStreamCoder audioCoder = getActiveInputStream().getAudioCoder();
+    AudioFormat audioFormat = new AudioFormat(audioCoder.getSampleRate(),
+        (int)IAudioSamples.findSampleBitDepth(audioCoder.getSampleFormat()),
+        audioCoder.getChannels(),
+        true, /* xuggler defaults to signed 16 bit samples */
+        false);
+    DataLine.Info info = new DataLine.Info(SourceDataLine.class, audioFormat);
+    try {
+      mLine = (SourceDataLine) AudioSystem.getLine(info);
+      mLine.open(audioFormat);
+    } catch (LineUnavailableException e) {
+      return false;
+    }
+    mLine.start();
+    return true;
+  }
+  
+  public void addInputMediaStream(String name) {
+	  InputMediaStream stream = new InputMediaStream(name,false,true);
+	  streams.add(stream);
+	  streamStartTimestamp = System.currentTimeMillis();
+	  setupAudio();
+    streams.peek().start();
+  }
+  
+  public static void main(String[] argv) throws Exception {
+	  if (argv.length <= 0)
+	      throw new IllegalArgumentException("must pass in a filename as the first argument");
+	  
+	  String filename = argv[0];
+	  MediaStreamBackup stream = new MediaStreamBackup();
+	  stream.addInputMediaStream(filename);
+	  
+	  while (!stream.isDone()) {
+	    long frameStart = System.currentTimeMillis();
+      System.out.println((System.currentTimeMillis()-frameStart) + " ms to A");
+	    IVideoPictureWrapper nextPic = stream.getVideoFrame();
+      System.out.println((System.currentTimeMillis()-frameStart) + " ms to B");
+
+      long delay = millisecondsUntilTimeToDisplay(nextPic.iVideoPicture());
+      try {
+        if (delay > 0)
+          Thread.sleep(delay);
+      } catch (InterruptedException e) {
+        return;
+      }
+      System.out.println((System.currentTimeMillis()-frameStart) + " ms to E");
+      System.out.println("Saw image of size: " + nextPic.byteArray().length);
+      stream.serverDisp.updateFull(nextPic.bufferedImage());
+
+      System.out.println((System.currentTimeMillis()-frameStart) + " ms to F");
+      // --------------------
+      // Client 
+      // --------------------
+//      System.out.println((System.currentTimeMillis()-frameStart) + " ms to H");
+//      ByteArrayInputStream clientIn = new ByteArrayInputStream(nextPic.byteArray());
+//      BufferedImage clientImage = ImageIO.read(clientIn);
+//      stream.clientDisp.updateFull(clientImage);
+  }
+	  
+  }
+
+  public boolean isDone() {
+    return getActiveInputStream() == null;
+  }
+  private InputMediaStream getActiveInputStream() {
+    while (streams.peek().isDone()) {
+      streams.remove();
+      if (!streams.peek().isDone())
+        streams.peek().start();
+      streamStartTimestamp = System.currentTimeMillis();
+    };
+    return streams.peek();
+  }
+
+  public IAudioSamples getAudioFrame() throws Exception
+  {
+    InputMediaStream stream = getActiveInputStream();
+    if (stream == null)
+      return null;
+	  return streams.peek().getNextAudioFrameWait();
+  }
+  public IVideoPictureWrapper getVideoFrame() throws Exception
+  {
+    InputMediaStream stream = getActiveInputStream();
+    if (stream == null)
+      return offlinePic;
+    return streams.peek().getNextVideoFrameWait();
+  }
+
+  private static long millisecondsUntilTimeToDisplay(IVideoPicture picture)
+  {
+    long millisecondsToSleep = 0;
+    if (mFirstVideoTimestampInStream == Global.NO_PTS)
+    {
+      // This is our first time through
+      mFirstVideoTimestampInStream = picture.getTimeStamp();
+      // get the starting clock time so we can hold up frames
+      // until the right time.
+      mSystemVideoClockStartTime = System.currentTimeMillis();
+      millisecondsToSleep = 0;
+    } else {
+      long systemClockCurrentTime = System.currentTimeMillis();
+      long millisecondsClockTimeSinceStartofVideo = systemClockCurrentTime - mSystemVideoClockStartTime;
+      // compute how long for this frame since the first frame in the stream.
+      // remember that IVideoPicture and IAudioSamples timestamps are always in MICROSECONDS,
+      // so we divide by 1000 to get milliseconds.
+      long millisecondsStreamTimeSinceStartOfVideo = (picture.getTimeStamp() - mFirstVideoTimestampInStream)/1000;
+      final long millisecondsTolerance = 10; // and we give ourselfs 50 ms of tolerance
+      millisecondsToSleep = (millisecondsStreamTimeSinceStartOfVideo -
+          (millisecondsClockTimeSinceStartofVideo+millisecondsTolerance));
+    }
+    return millisecondsToSleep;
+  }
+}

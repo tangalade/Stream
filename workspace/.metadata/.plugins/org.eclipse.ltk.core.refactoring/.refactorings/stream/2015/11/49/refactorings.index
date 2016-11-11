@@ -1,0 +1,17 @@
+1448766398919	Copy compilation unit
+1448766639661	Rename field 'oPacket'
+1448766980777	Rename type 'Server'
+1448767140616	Rename type 'ServerSession'
+1448767475659	Rename type 'RTPServerSession'
+1448767677187	Copy compilation unit
+1448767934101	Copy compilation unit
+1448770419324	Rename type 'Error'
+1448770812393	Rename local variable 'desc'
+1448770815572	Rename field 'desc'
+1448770821174	Rename method 'desc'
+1448771045721	Rename type 'Request'
+1448772445790	Rename method 'encodePublic'
+1448772450336	Rename local variable 'pub'
+1448775175668	Rename method 'encodeOptions'
+1448775181529	Rename local variable 'options'
+1448816514812	Rename field 'name'

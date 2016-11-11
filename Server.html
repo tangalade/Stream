@@ -1,0 +1,688 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:m="http://schemas.microsoft.com/office/2004/12/omml"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 12">
+<meta name=Originator content="Microsoft Word 12">
+<link rel=File-List href="Server_files/filelist.xml">
+<title>Server.java</title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>Windows User</o:Author>
+  <o:LastAuthor>Windows User</o:LastAuthor>
+  <o:Revision>2</o:Revision>
+  <o:TotalTime>0</o:TotalTime>
+  <o:Created>2015-10-29T02:19:00Z</o:Created>
+  <o:LastSaved>2015-10-29T02:19:00Z</o:LastSaved>
+  <o:Pages>4</o:Pages>
+  <o:Words>1358</o:Words>
+  <o:Characters>7745</o:Characters>
+  <o:Lines>64</o:Lines>
+  <o:Paragraphs>18</o:Paragraphs>
+  <o:CharactersWithSpaces>9085</o:CharactersWithSpaces>
+  <o:Version>12.00</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]-->
+<link rel=themeData href="Server_files/themedata.thmx">
+<link rel=colorSchemeMapping href="Server_files/colorschememapping.xml">
+<!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:TrackMoves>false</w:TrackMoves>
+  <w:TrackFormatting/>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:DoNotPromoteQF/>
+  <w:LidThemeOther>EN-US</w:LidThemeOther>
+  <w:LidThemeAsian>JA</w:LidThemeAsian>
+  <w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript>
+  <w:Compatibility>
+   <w:BreakWrappedTables/>
+   <w:SnapToGridInCell/>
+   <w:WrapTextWithPunct/>
+   <w:UseAsianBreakRules/>
+   <w:DontGrowAutofit/>
+   <w:SplitPgBreakAndParaMark/>
+   <w:DontVertAlignCellWithSp/>
+   <w:DontBreakConstrainedForcedTables/>
+   <w:DontVertAlignInTxbx/>
+   <w:Word11KerningPairs/>
+   <w:CachedColBalance/>
+  </w:Compatibility>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+  <m:mathPr>
+   <m:mathFont m:val="Cambria Math"/>
+   <m:brkBin m:val="before"/>
+   <m:brkBinSub m:val="&#45;-"/>
+   <m:smallFrac m:val="off"/>
+   <m:dispDef/>
+   <m:lMargin m:val="0"/>
+   <m:rMargin m:val="0"/>
+   <m:defJc m:val="centerGroup"/>
+   <m:wrapIndent m:val="1440"/>
+   <m:intLim m:val="subSup"/>
+   <m:naryLim m:val="undOvr"/>
+  </m:mathPr></w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:LatentStyles DefLockedState="false" DefUnhideWhenUsed="true"
+  DefSemiHidden="true" DefQFormat="false" DefPriority="99"
+  LatentStyleCount="267">
+  <w:LsdException Locked="false" Priority="0" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Normal"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="heading 1"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="heading 2"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="heading 3"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 4"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 5"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 6"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 7"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 8"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 9"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 1"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 2"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 3"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 4"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 5"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 6"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 7"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 8"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 9"/>
+  <w:LsdException Locked="false" Priority="35" QFormat="true" Name="caption"/>
+  <w:LsdException Locked="false" Priority="10" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Title"/>
+  <w:LsdException Locked="false" Priority="1" Name="Default Paragraph Font"/>
+  <w:LsdException Locked="false" Priority="11" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Subtitle"/>
+  <w:LsdException Locked="false" Priority="22" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Strong"/>
+  <w:LsdException Locked="false" Priority="20" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Emphasis"/>
+  <w:LsdException Locked="false" Priority="59" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Table Grid"/>
+  <w:LsdException Locked="false" UnhideWhenUsed="false" Name="Placeholder Text"/>
+  <w:LsdException Locked="false" Priority="1" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="No Spacing"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading Accent 1"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List Accent 1"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid Accent 1"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1 Accent 1"/>
+  <w:LsdException Locked="false" UnhideWhenUsed="false" Name="Revision"/>
+  <w:LsdException Locked="false" Priority="34" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="List Paragraph"/>
+  <w:LsdException Locked="false" Priority="29" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Quote"/>
+  <w:LsdException Locked="false" Priority="30" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Intense Quote"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 1"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List Accent 1"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading Accent 1"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List Accent 1"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid Accent 1"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading Accent 2"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List Accent 2"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid Accent 2"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 2"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List Accent 2"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading Accent 2"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List Accent 2"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid Accent 2"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading Accent 3"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List Accent 3"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid Accent 3"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 3"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List Accent 3"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading Accent 3"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List Accent 3"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid Accent 3"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading Accent 4"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List Accent 4"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid Accent 4"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 4"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List Accent 4"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading Accent 4"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List Accent 4"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid Accent 4"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading Accent 5"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List Accent 5"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid Accent 5"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 5"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List Accent 5"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading Accent 5"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List Accent 5"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid Accent 5"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading Accent 6"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List Accent 6"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid Accent 6"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 6"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List Accent 6"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading Accent 6"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List Accent 6"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid Accent 6"/>
+  <w:LsdException Locked="false" Priority="19" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Subtle Emphasis"/>
+  <w:LsdException Locked="false" Priority="21" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Intense Emphasis"/>
+  <w:LsdException Locked="false" Priority="31" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Subtle Reference"/>
+  <w:LsdException Locked="false" Priority="32" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Intense Reference"/>
+  <w:LsdException Locked="false" Priority="33" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Book Title"/>
+  <w:LsdException Locked="false" Priority="37" Name="Bibliography"/>
+  <w:LsdException Locked="false" Priority="39" QFormat="true" Name="TOC Heading"/>
+ </w:LatentStyles>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"MS Mincho";
+	panose-1:2 2 6 9 4 2 5 8 3 4;
+	mso-font-alt:"\FF2D\FF33 \660E\671D";
+	mso-font-charset:128;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:-536870145 1791491579 134217746 0 131231 0;}
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;
+	mso-font-charset:1;
+	mso-generic-font-family:roman;
+	mso-font-format:other;
+	mso-font-pitch:variable;
+	mso-font-signature:0 0 0 0 0 0;}
+@font-face
+	{font-family:Consolas;
+	panose-1:2 11 6 9 2 2 4 3 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:roman;
+	mso-font-format:other;
+	mso-font-pitch:auto;
+	mso-font-signature:0 0 0 0 0 0;}
+@font-face
+	{font-family:"\@MS Mincho";
+	panose-1:2 2 6 9 4 2 5 8 3 4;
+	mso-font-charset:128;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:-536870145 1791491579 134217746 0 131231 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman","serif";
+	mso-fareast-font-family:"MS Mincho";
+	mso-fareast-theme-font:minor-fareast;}
+h1
+	{mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-link:"Heading 1 Char";
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:1;
+	font-size:19.0pt;
+	font-family:"Arial","sans-serif";
+	mso-fareast-font-family:"MS Mincho";
+	mso-fareast-theme-font:minor-fareast;
+	color:#A77C46;
+	font-weight:normal;}
+h2
+	{mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-link:"Heading 2 Char";
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:2;
+	font-size:16.0pt;
+	font-family:"Arial","sans-serif";
+	mso-fareast-font-family:"MS Mincho";
+	mso-fareast-theme-font:minor-fareast;
+	color:#A77C46;
+	font-weight:bold;}
+h3
+	{mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-link:"Heading 3 Char";
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:3;
+	font-size:14.0pt;
+	font-family:"Arial","sans-serif";
+	mso-fareast-font-family:"MS Mincho";
+	mso-fareast-theme-font:minor-fareast;
+	color:#A77C46;
+	font-weight:bold;}
+a:link, span.MsoHyperlink
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	color:#000066;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	color:#666666;
+	text-decoration:underline;
+	text-underline:single;}
+p
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Arial","sans-serif";
+	mso-fareast-font-family:"MS Mincho";
+	mso-fareast-theme-font:minor-fareast;}
+pre
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-link:"HTML Preformatted Char";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt;
+	font-size:10.0pt;
+	font-family:"Courier New";
+	mso-fareast-font-family:"MS Mincho";
+	mso-fareast-theme-font:minor-fareast;}
+span.Heading1Char
+	{mso-style-name:"Heading 1 Char";
+	mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-locked:yes;
+	mso-style-link:"Heading 1";
+	mso-ansi-font-size:14.0pt;
+	mso-bidi-font-size:14.0pt;
+	font-family:"Cambria","serif";
+	mso-ascii-font-family:Cambria;
+	mso-ascii-theme-font:major-latin;
+	mso-fareast-font-family:"MS Gothic";
+	mso-fareast-theme-font:major-fareast;
+	mso-hansi-font-family:Cambria;
+	mso-hansi-theme-font:major-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:major-bidi;
+	color:#365F91;
+	mso-themecolor:accent1;
+	mso-themeshade:191;
+	font-weight:bold;}
+span.Heading2Char
+	{mso-style-name:"Heading 2 Char";
+	mso-style-noshow:yes;
+	mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-locked:yes;
+	mso-style-link:"Heading 2";
+	mso-ansi-font-size:13.0pt;
+	mso-bidi-font-size:13.0pt;
+	font-family:"Cambria","serif";
+	mso-ascii-font-family:Cambria;
+	mso-ascii-theme-font:major-latin;
+	mso-fareast-font-family:"MS Gothic";
+	mso-fareast-theme-font:major-fareast;
+	mso-hansi-font-family:Cambria;
+	mso-hansi-theme-font:major-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:major-bidi;
+	color:#4F81BD;
+	mso-themecolor:accent1;
+	font-weight:bold;}
+span.Heading3Char
+	{mso-style-name:"Heading 3 Char";
+	mso-style-noshow:yes;
+	mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-locked:yes;
+	mso-style-link:"Heading 3";
+	mso-ansi-font-size:12.0pt;
+	mso-bidi-font-size:12.0pt;
+	font-family:"Cambria","serif";
+	mso-ascii-font-family:Cambria;
+	mso-ascii-theme-font:major-latin;
+	mso-fareast-font-family:"MS Gothic";
+	mso-fareast-theme-font:major-fareast;
+	mso-hansi-font-family:Cambria;
+	mso-hansi-theme-font:major-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:major-bidi;
+	color:#4F81BD;
+	mso-themecolor:accent1;
+	font-weight:bold;}
+span.HTMLPreformattedChar
+	{mso-style-name:"HTML Preformatted Char";
+	mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-unhide:no;
+	mso-style-locked:yes;
+	mso-style-link:"HTML Preformatted";
+	font-family:"Consolas","serif";
+	mso-ascii-font-family:Consolas;
+	mso-fareast-font-family:"MS Mincho";
+	mso-fareast-theme-font:minor-fareast;
+	mso-hansi-font-family:Consolas;}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	mso-default-props:yes;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.WordSection1
+	{page:WordSection1;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-qformat:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman","serif";}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="2050"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body lang=EN-US link="#000066" vlink="#666666" style='tab-interval:.5in'>
+
+<div class=WordSection1><pre>/* ------------------</pre><pre><span style='mso-spacerun:yes'>   </span>Server</pre><pre><span style='mso-spacerun:yes'>   </span>usage: java Server [RTSP listening port]</pre><pre><span style='mso-spacerun:yes'>   </span>---------------------- */</pre><pre><o:p>&nbsp;</o:p></pre><pre><o:p>&nbsp;</o:p></pre><pre>import java.io.*;</pre><pre>import java.net.*;</pre><pre>import java.awt.*;</pre><pre>import java.util.*;</pre><pre>import java.awt.event.*;</pre><pre>import javax.swing.*;</pre><pre>import javax.swing.Timer;</pre><pre><o:p>&nbsp;</o:p></pre><pre>public class Server extends JFrame implements ActionListener {</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>  </span>//RTP variables:</pre><pre><span style='mso-spacerun:yes'>  </span>//----------------</pre><pre><span style='mso-spacerun:yes'>  </span>DatagramSocket RTPsocket; //socket to be used to send and receive UDP packets</pre><pre><span style='mso-spacerun:yes'>  </span>DatagramPacket senddp; //UDP packet containing the video frames</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>  </span>InetAddress ClientIPAddr; //Client IP address</pre><pre><span style='mso-spacerun:yes'>  </span>int RTP_dest_port = 0; //destination port for RTP packets<span style='mso-spacerun:yes'>  </span>(given by the RTSP Client)</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>  </span>//GUI:</pre><pre><span style='mso-spacerun:yes'>  </span>//----------------</pre><pre><span style='mso-spacerun:yes'>  </span>JLabel label;</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>  </span>//Video variables:</pre><pre><span style='mso-spacerun:yes'>  </span>//----------------</pre><pre><span style='mso-spacerun:yes'>  </span>int imagenb = 0; //image nb of the image currently transmitted</pre><pre><span style='mso-spacerun:yes'>  </span>VideoStream video; //VideoStream object used to access video frames</pre><pre><span style='mso-spacerun:yes'>  </span>static int MJPEG_TYPE = 26; //RTP payload type for MJPEG video</pre><pre><span style='mso-spacerun:yes'>  </span>static int FRAME_PERIOD = 100; //Frame period of the video to stream, in ms</pre><pre><span style='mso-spacerun:yes'>  </span>static int VIDEO_LENGTH = 500; //length of the video in frames</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>  </span>Timer timer; //timer used to send the images at the video frame rate</pre><pre><span style='mso-spacerun:yes'>  </span>byte[] buf; //buffer used to store the images to send to the client </pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>  </span>//RTSP variables</pre><pre><span style='mso-spacerun:yes'>  </span>//----------------</pre><pre><span style='mso-spacerun:yes'>  </span>//rtsp states</pre><pre><span style='mso-spacerun:yes'>  </span>final static int INIT = 0;</pre><pre><span style='mso-spacerun:yes'>  </span>final static int READY = 1;</pre><pre><span style='mso-spacerun:yes'>  </span>final static int PLAYING = 2;</pre><pre><span style='mso-spacerun:yes'>  </span>//rtsp message types</pre><pre><span style='mso-spacerun:yes'>  </span>final static int SETUP = 3;</pre><pre><span style='mso-spacerun:yes'>  </span>final static int PLAY = 4;</pre><pre><span style='mso-spacerun:yes'>  </span>final static int PAUSE = 5;</pre><pre><span style='mso-spacerun:yes'>  </span>final static int TEARDOWN = 6;</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>  </span>static int state; //RTSP Server state == INIT or READY or PLAY</pre><pre><span style='mso-spacerun:yes'>  </span>Socket RTSPsocket; //socket used to send/receive RTSP messages</pre><pre><span style='mso-spacerun:yes'>  </span>//input and output stream filters</pre><pre><span style='mso-spacerun:yes'>  </span>static BufferedReader RTSPBufferedReader;</pre><pre><span style='mso-spacerun:yes'>  </span>static BufferedWriter RTSPBufferedWriter;</pre><pre><span style='mso-spacerun:yes'>  </span>static String VideoFileName; //video file requested from the client</pre><pre><span style='mso-spacerun:yes'>  </span>static int RTSP_ID = 123456; //ID of the RTSP session</pre><pre><span style='mso-spacerun:yes'>  </span>int RTSPSeqNb = 0; //Sequence number of RTSP messages within the session</pre><pre><span style='mso-spacerun:yes'>  </span></pre><pre><span style='mso-spacerun:yes'>  </span>final static String CRLF = &quot;\r\n&quot;;</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>  </span>//--------------------------------</pre><pre><span style='mso-spacerun:yes'>  </span>//Constructor</pre><pre><span style='mso-spacerun:yes'>  </span>//--------------------------------</pre><pre><span style='mso-spacerun:yes'>  </span>public Server(){</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>    </span>//init Frame</pre><pre><span style='mso-spacerun:yes'>    </span>super(&quot;Server&quot;);</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>    </span>//init Timer</pre><pre><span style='mso-spacerun:yes'>    </span>timer = new Timer(FRAME_PERIOD, this);</pre><pre><span style='mso-spacerun:yes'>    </span>timer.setInitialDelay(0);</pre><pre><span style='mso-spacerun:yes'>    </span>timer.setCoalesce(true);</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>    </span>//allocate memory for the sending buffer</pre><pre><span style='mso-spacerun:yes'>    </span>buf = new byte[15000]; </pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>    </span>//Handler to close the main window</pre><pre><span style='mso-spacerun:yes'>    </span>addWindowListener(new WindowAdapter() {</pre><pre><span style='mso-spacerun:yes'>      </span>public void windowClosing(WindowEvent e) {</pre><pre><span
+style='mso-tab-count:1'>        </span>//stop the timer and exit</pre><pre><span
+style='mso-tab-count:1'>        </span>timer.stop();</pre><pre><span
+style='mso-tab-count:1'>        </span>System.exit(0);</pre><pre><span style='mso-spacerun:yes'>      </span>}});</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>    </span>//GUI:</pre><pre><span style='mso-spacerun:yes'>    </span>label = new JLabel(&quot;Send frame #<span style='mso-spacerun:yes'>        </span>&quot;, JLabel.CENTER);</pre><pre><span style='mso-spacerun:yes'>    </span>getContentPane().add(label, BorderLayout.CENTER);</pre><pre><span style='mso-spacerun:yes'>  </span>}</pre><pre><span style='mso-spacerun:yes'>          </span></pre><pre><span style='mso-spacerun:yes'>  </span>//------------------------------------</pre><pre><span style='mso-spacerun:yes'>  </span>//main</pre><pre><span style='mso-spacerun:yes'>  </span>//------------------------------------</pre><pre><span style='mso-spacerun:yes'>  </span>public static void main(String argv[]) throws Exception</pre><pre><span style='mso-spacerun:yes'>  </span>{</pre><pre><span style='mso-spacerun:yes'>    </span>//create a Server object</pre><pre><span style='mso-spacerun:yes'>    </span>Server theServer = new Server();</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>    </span>//show GUI:</pre><pre><span style='mso-spacerun:yes'>    </span>theServer.pack();</pre><pre><span style='mso-spacerun:yes'>    </span>theServer.setVisible(true);</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>    </span>//get RTSP socket port from the command line</pre><pre><span style='mso-spacerun:yes'>    </span>int RTSPport = Integer.parseInt(argv[0]);</pre><pre><span style='mso-spacerun:yes'>   </span></pre><pre><span style='mso-spacerun:yes'>    </span>//Initiate TCP connection with the client for the RTSP session</pre><pre><span style='mso-spacerun:yes'>    </span>ServerSocket listenSocket = new ServerSocket(RTSPport);</pre><pre><span style='mso-spacerun:yes'>    </span>theServer.RTSPsocket = listenSocket.accept();</pre><pre><span style='mso-spacerun:yes'>    </span>listenSocket.close();</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>    </span>//Get Client IP address</pre><pre><span style='mso-spacerun:yes'>    </span>theServer.ClientIPAddr = theServer.RTSPsocket.getInetAddress();</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>    </span>//Initiate RTSPstate</pre><pre><span style='mso-spacerun:yes'>    </span>state = INIT;</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>    </span>//Set input and output stream filters:</pre><pre><span style='mso-spacerun:yes'>    </span>RTSPBufferedReader = new BufferedReader(new InputStreamReader(theServer.RTSPsocket.getInputStream()) );</pre><pre><span style='mso-spacerun:yes'>    </span>RTSPBufferedWriter = new BufferedWriter(new OutputStreamWriter(theServer.RTSPsocket.getOutputStream()) );</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>    </span>//Wait for the SETUP message from the client</pre><pre><span style='mso-spacerun:yes'>    </span>int request_type;</pre><pre><span style='mso-spacerun:yes'>    </span>boolean done = false;</pre><pre><span style='mso-spacerun:yes'>    </span>while(!done)</pre><pre><span style='mso-spacerun:yes'>      </span>{</pre><pre><span
+style='mso-tab-count:1'>        </span>request_type = theServer.parse_RTSP_request(); //blocking</pre><pre><span
+style='mso-tab-count:1'>        </span></pre><pre><span style='mso-tab-count:
+1'>        </span>if (request_type == SETUP)</pre><pre><span style='mso-tab-count:
+1'>        </span><span style='mso-spacerun:yes'>  </span>{</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>done = true;</pre><pre><o:p>&nbsp;</o:p></pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//update RTSP state</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>state = READY;</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>System.out.println(&quot;New RTSP state: READY&quot;);</pre><pre><span style='mso-spacerun:yes'>   </span></pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//Send response</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>theServer.send_RTSP_response();</pre><pre><span style='mso-spacerun:yes'>   </span></pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//init the VideoStream object:</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>theServer.video = new VideoStream(VideoFileName);</pre><pre><o:p>&nbsp;</o:p></pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//init RTP socket</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>theServer.RTPsocket = new DatagramSocket();</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>}</pre><pre><span style='mso-spacerun:yes'>      </span>}</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>     </span>//loop to handle RTSP requests</pre><pre><span style='mso-spacerun:yes'>    </span>while(true)</pre><pre><span style='mso-spacerun:yes'>      </span>{</pre><pre><span
+style='mso-tab-count:1'>        </span>//parse the request</pre><pre><span
+style='mso-tab-count:1'>        </span>request_type = theServer.parse_RTSP_request(); //blocking</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span></pre><pre><span
+style='mso-tab-count:1'>        </span>if ((request_type == PLAY) &amp;&amp; (state == READY))</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>{</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//send back response</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>theServer.send_RTSP_response();</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//start timer</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>theServer.timer.start();</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//update state</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>state = PLAYING;</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>System.out.println(&quot;New RTSP state: PLAYING&quot;);</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>}</pre><pre><span
+style='mso-tab-count:1'>        </span>else if ((request_type == PAUSE) &amp;&amp; (state == PLAYING))</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>{</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//send back response</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>theServer.send_RTSP_response();</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//stop timer</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>theServer.timer.stop();</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//update state</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>state = READY;</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>System.out.println(&quot;New RTSP state: READY&quot;);</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>}</pre><pre><span
+style='mso-tab-count:1'>        </span>else if (request_type == TEARDOWN)</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>{</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//send back response</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>theServer.send_RTSP_response();</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//stop timer</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>theServer.timer.stop();</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>//close sockets</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>theServer.RTSPsocket.close();</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>theServer.RTPsocket.close();</pre><pre><o:p>&nbsp;</o:p></pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>System.exit(0);</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>}</pre><pre><span style='mso-spacerun:yes'>      </span>}</pre><pre><span style='mso-spacerun:yes'>  </span>}</pre><pre><o:p>&nbsp;</o:p></pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>  </span>//------------------------</pre><pre><span style='mso-spacerun:yes'>  </span>//Handler for timer</pre><pre><span style='mso-spacerun:yes'>  </span>//------------------------</pre><pre><span style='mso-spacerun:yes'>  </span>public void actionPerformed(ActionEvent e) {</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>    </span>//if the current image nb is less than the length of the video</pre><pre><span style='mso-spacerun:yes'>    </span>if (imagenb &lt; VIDEO_LENGTH)</pre><pre><span style='mso-spacerun:yes'>      </span>{</pre><pre><span
+style='mso-tab-count:1'>        </span>//update current imagenb</pre><pre><span
+style='mso-tab-count:1'>        </span>imagenb++;</pre><pre><span style='mso-spacerun:yes'>   </span><span style='mso-spacerun:yes'>    </span></pre><pre><span
+style='mso-tab-count:1'>        </span>try {</pre><pre><span style='mso-tab-count:
+1'>        </span><span style='mso-spacerun:yes'>  </span>//get next frame to send from the video, as well as its size</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>int image_length = video.getnextframe(buf);</pre><pre><o:p>&nbsp;</o:p></pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>//Builds an RTPpacket object containing the frame</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>RTPpacket rtp_packet = new RTPpacket(MJPEG_TYPE, imagenb, imagenb*FRAME_PERIOD, buf, image_length);</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span></pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>//get to total length of the full rtp packet to send</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>int packet_length = rtp_packet.getlength();</pre><pre><o:p>&nbsp;</o:p></pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>//retrieve the packet bitstream and store it in an array of bytes</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>byte[] packet_bits = new byte[packet_length];</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>rtp_packet.getpacket(packet_bits);</pre><pre><o:p>&nbsp;</o:p></pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>//send the packet as a DatagramPacket over the UDP socket </pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>senddp = new DatagramPacket(packet_bits, packet_length, ClientIPAddr, RTP_dest_port);</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>RTPsocket.send(senddp);</pre><pre><o:p>&nbsp;</o:p></pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>//System.out.println(&quot;Send frame #&quot;+imagenb);</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>//print the header bitstream</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>rtp_packet.printheader();</pre><pre><o:p>&nbsp;</o:p></pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>//update GUI</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>label.setText(&quot;Send frame #&quot; + imagenb);</pre><pre><span
+style='mso-tab-count:1'>        </span>}</pre><pre><span style='mso-tab-count:
+1'>        </span>catch(Exception ex)</pre><pre><span style='mso-tab-count:
+1'>        </span><span style='mso-spacerun:yes'>  </span>{</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>System.out.println(&quot;Exception caught: &quot;+ex);</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>System.exit(0);</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>}</pre><pre><span style='mso-spacerun:yes'>      </span>}</pre><pre><span style='mso-spacerun:yes'>    </span>else</pre><pre><span style='mso-spacerun:yes'>      </span>{</pre><pre><span
+style='mso-tab-count:1'>        </span>//if we have reached the end of the video file, stop the timer</pre><pre><span
+style='mso-tab-count:1'>        </span>timer.stop();</pre><pre><span style='mso-spacerun:yes'>      </span>}</pre><pre><span style='mso-spacerun:yes'>  </span>}</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>  </span>//------------------------------------</pre><pre><span style='mso-spacerun:yes'>  </span>//Parse RTSP Request</pre><pre><span style='mso-spacerun:yes'>  </span>//------------------------------------</pre><pre><span style='mso-spacerun:yes'>  </span>private int parse_RTSP_request()</pre><pre><span style='mso-spacerun:yes'>  </span>{</pre><pre><span style='mso-spacerun:yes'>    </span>int request_type = -1;</pre><pre><span style='mso-spacerun:yes'>    </span>try{</pre><pre><span style='mso-spacerun:yes'>      </span>//parse request line and extract the request_type:</pre><pre><span style='mso-spacerun:yes'>      </span>String RequestLine = RTSPBufferedReader.readLine();</pre><pre><span style='mso-spacerun:yes'>      </span>//System.out.println(&quot;RTSP Server - Received from Client:&quot;);</pre><pre><span style='mso-spacerun:yes'>      </span>System.out.println(RequestLine);</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>      </span>StringTokenizer tokens = new StringTokenizer(RequestLine);</pre><pre><span style='mso-spacerun:yes'>      </span>String request_type_string = tokens.nextToken();</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>      </span>//convert to request_type structure:</pre><pre><span style='mso-spacerun:yes'>      </span>if ((new String(request_type_string)).compareTo(&quot;SETUP&quot;) == 0)</pre><pre><span
+style='mso-tab-count:1'>        </span>request_type = SETUP;</pre><pre><span style='mso-spacerun:yes'>      </span>else if ((new String(request_type_string)).compareTo(&quot;PLAY&quot;) == 0)</pre><pre><span
+style='mso-tab-count:1'>        </span>request_type = PLAY;</pre><pre><span style='mso-spacerun:yes'>      </span>else if ((new String(request_type_string)).compareTo(&quot;PAUSE&quot;) == 0)</pre><pre><span
+style='mso-tab-count:1'>        </span>request_type = PAUSE;</pre><pre><span style='mso-spacerun:yes'>      </span>else if ((new String(request_type_string)).compareTo(&quot;TEARDOWN&quot;) == 0)</pre><pre><span
+style='mso-tab-count:1'>        </span>request_type = TEARDOWN;</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>      </span>if (request_type == SETUP)</pre><pre><span
+style='mso-tab-count:1'>        </span>{</pre><pre><span style='mso-tab-count:
+1'>        </span><span style='mso-spacerun:yes'>  </span>//extract VideoFileName from RequestLine</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>VideoFileName = tokens.nextToken();</pre><pre><span
+style='mso-tab-count:1'>        </span>}</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>      </span>//parse the SeqNumLine and extract CSeq field</pre><pre><span style='mso-spacerun:yes'>      </span>String SeqNumLine = RTSPBufferedReader.readLine();</pre><pre><span style='mso-spacerun:yes'>      </span>System.out.println(SeqNumLine);</pre><pre><span style='mso-spacerun:yes'>      </span>tokens = new StringTokenizer(SeqNumLine);</pre><pre><span style='mso-spacerun:yes'>      </span>tokens.nextToken();</pre><pre><span style='mso-spacerun:yes'>      </span>RTSPSeqNb = Integer.parseInt(tokens.nextToken());</pre><pre><span
+style='mso-tab-count:1'>        </span></pre><pre><span style='mso-spacerun:yes'>      </span>//get LastLine</pre><pre><span style='mso-spacerun:yes'>      </span>String LastLine = RTSPBufferedReader.readLine();</pre><pre><span style='mso-spacerun:yes'>      </span>System.out.println(LastLine);</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>      </span>if (request_type == SETUP)</pre><pre><span
+style='mso-tab-count:1'>        </span>{</pre><pre><span style='mso-tab-count:
+1'>        </span><span style='mso-spacerun:yes'>  </span>//extract RTP_dest_port from LastLine</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>tokens = new StringTokenizer(LastLine);</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>for (int i=0; i&lt;3; i++)</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>    </span>tokens.nextToken(); //skip unused stuff</pre><pre><span
+style='mso-tab-count:1'>        </span><span style='mso-spacerun:yes'>  </span>RTP_dest_port = Integer.parseInt(tokens.nextToken());</pre><pre><span
+style='mso-tab-count:1'>        </span>}</pre><pre><span style='mso-spacerun:yes'>      </span>//else LastLine will be the SessionId line ... do not check for now.</pre><pre><span style='mso-spacerun:yes'>    </span>}</pre><pre><span style='mso-spacerun:yes'>    </span>catch(Exception ex)</pre><pre><span style='mso-spacerun:yes'>      </span>{</pre><pre><span
+style='mso-tab-count:1'>        </span>System.out.println(&quot;Exception caught: &quot;+ex);</pre><pre><span
+style='mso-tab-count:1'>        </span>System.exit(0);</pre><pre><span style='mso-spacerun:yes'>      </span>}</pre><pre><span style='mso-spacerun:yes'>    </span>return(request_type);</pre><pre><span style='mso-spacerun:yes'>  </span>}</pre><pre><o:p>&nbsp;</o:p></pre><pre><span style='mso-spacerun:yes'>  </span>//------------------------------------</pre><pre><span style='mso-spacerun:yes'>  </span>//Send RTSP Response</pre><pre><span style='mso-spacerun:yes'>  </span>//------------------------------------</pre><pre><span style='mso-spacerun:yes'>  </span>private void send_RTSP_response()</pre><pre><span style='mso-spacerun:yes'>  </span>{</pre><pre><span style='mso-spacerun:yes'>    </span>try{</pre><pre> <span style='mso-spacerun:yes'>     </span>RTSPBufferedWriter.write(&quot;RTSP/1.0 200 OK&quot;+CRLF);</pre><pre><span style='mso-spacerun:yes'>      </span>RTSPBufferedWriter.write(&quot;CSeq: &quot;+RTSPSeqNb+CRLF);</pre><pre><span style='mso-spacerun:yes'>      </span>RTSPBufferedWriter.write(&quot;Session: &quot;+RTSP_ID+CRLF);</pre><pre><span style='mso-spacerun:yes'>      </span>RTSPBufferedWriter.flush();</pre><pre><span style='mso-spacerun:yes'>      </span>//System.out.println(&quot;RTSP Server - Sent response to Client.&quot;);</pre><pre><span style='mso-spacerun:yes'>    </span>}</pre><pre><span style='mso-spacerun:yes'>    </span>catch(Exception ex)</pre><pre><span style='mso-spacerun:yes'>      </span>{</pre><pre><span
+style='mso-tab-count:1'>        </span>System.out.println(&quot;Exception caught: &quot;+ex);</pre><pre><span
+style='mso-tab-count:1'>        </span>System.exit(0);</pre><pre><span style='mso-spacerun:yes'>      </span>}</pre><pre><span style='mso-spacerun:yes'>  </span>}</pre><pre>}</pre></div>
+
+</body>
+
+</html>

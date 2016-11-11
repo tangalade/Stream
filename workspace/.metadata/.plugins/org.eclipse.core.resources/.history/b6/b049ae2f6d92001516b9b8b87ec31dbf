@@ -1,0 +1,123 @@
+package collage;
+
+import java.nio.ByteBuffer;
+
+/**
+ * @author Administrator
+ *
+ */
+public class IPacketDatagramPacket {
+  public static final int HEADER_SIZE = Long.BYTES + (3*Integer.BYTES);
+  /**
+   * IPacket number in stream
+   */
+  private long iPacketNum;
+  /**
+   * Index of this IPacket frame, relative to its other frames
+   */
+  private int iPacketFrameIndex;
+  /**
+   * Number of frames composing this IPacket
+   */
+  private int iPacketNumFrames;
+  /**
+   * Frame length in bytes
+   */
+  private int iPacketFrameLength;
+  /**
+   * Frame byte data
+   */
+  private byte[] iPacketFrame;
+  private byte[] packetData;
+  
+  public static IPacketDatagramPacket make(long iPacketNum, int iPacketFrameIndex,
+      int iPacketNumFrames, int iPacketFrameLength, byte[] iPacketFrame) {
+    if (iPacketFrame.length != iPacketFrameLength)
+      throw new IllegalArgumentException("iPacketFrameLength: " + iPacketFrameLength + " != iPacketFrame.length: " + iPacketFrame.length);
+    if (iPacketFrameIndex >= iPacketNumFrames)
+      throw new IllegalArgumentException("iPacketFrameIndex: " + iPacketFrameIndex + " >= iPacketNumFrames: " + iPacketNumFrames);
+    
+    IPacketDatagramPacket packet = new IPacketDatagramPacket();
+    
+    packet.iPacketNum = iPacketNum;
+    packet.iPacketFrameIndex = iPacketFrameIndex;
+    packet.iPacketNumFrames = iPacketNumFrames;
+    packet.iPacketFrameLength = iPacketFrameLength;
+    packet.iPacketFrame = iPacketFrame.clone();
+    
+    ByteBuffer buf = ByteBuffer.allocate(HEADER_SIZE + iPacketFrameLength);
+    buf.putLong(iPacketNum);
+    buf.putInt(iPacketFrameIndex);
+    buf.putInt(iPacketNumFrames);
+    buf.putInt(iPacketFrameLength);
+    buf.put(iPacketFrame);
+    packet.packetData = buf.array();
+    
+    return packet;
+  }
+
+  public static IPacketDatagramPacket make(byte[] packetData) {
+    if (packetData.length < HEADER_SIZE)
+      throw new IllegalArgumentException("Missing header: packet size < " + HEADER_SIZE);
+
+    IPacketDatagramPacket packet = new IPacketDatagramPacket();
+      
+    packet.packetData = packetData.clone();
+    
+    ByteBuffer buf = ByteBuffer.wrap(packetData);
+    packet.iPacketNum = buf.getLong();
+    packet.iPacketFrameIndex = buf.getInt();
+    packet.iPacketNumFrames = buf.getInt();
+    packet.iPacketFrameLength = buf.getInt();
+    
+    if (buf.remaining() != packet.iPacketFrameLength)
+      throw new IllegalArgumentException("Unexpected frame length: expected " + packet.iPacketFrameLength + " have " + buf.remaining());
+    packet.iPacketFrame = new byte[packet.iPacketFrameLength];
+    buf.get(packet.iPacketFrame);
+    
+    return packet;
+  }
+
+  public long getIPacketNum() {
+    return iPacketNum;
+  }
+  public void setIPacketNum(long iPacketNum) {
+    this.iPacketNum = iPacketNum;
+  }
+
+  public int getIPacketFrameIndex() {
+    return iPacketFrameIndex;
+  }
+  public void setIPacketFrameIndex(int iPacketFrameIndex) {
+    this.iPacketFrameIndex = iPacketFrameIndex;
+  }
+
+  public int getIPacketNumFrames() {
+    return iPacketNumFrames;
+  }
+  public void setIPacketNumFrames(int iPacketNumFrames) {
+    this.iPacketNumFrames = iPacketNumFrames;
+  }
+
+  public int getIPacketFrameLength() {
+    return iPacketFrameLength;
+  }
+  public void setIPacketFrameLength(int iPacketFrameLength) {
+    this.iPacketFrameLength = iPacketFrameLength;
+  }
+
+  public byte[] getIPacketFrame() {
+    return iPacketFrame;
+  }
+  public void setIPacketFrame(byte[] iPacketFrame) {
+    this.iPacketFrame = iPacketFrame;
+  }
+
+  public byte[] getPacketData() {
+    return packetData;
+  }
+  public void setPacketData(byte[] packetData) {
+    this.packetData = packetData;
+  }
+  
+}

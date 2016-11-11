@@ -1,0 +1,96 @@
+package collage;
+
+import com.xuggle.xuggler.IStreamCoder;
+
+public class RTSPRequestPacket extends RTSPPacket {
+  private Request reqType = null;
+  private Integer rtspSeqNum = null;
+  private Integer sessionNum = null;
+  private String url = null;
+
+  private String data = null;
+  
+  public RTSPRequestPacket(Request reqType, String url, Integer rtspSeqNum, Integer sessionNum) throws IllegalArgumentException {
+    this.reqType = reqType;
+    this.rtspSeqNum = rtspSeqNum;
+    this.sessionNum = sessionNum;
+    this.url = url;
+    
+    encode();
+  }
+  
+  private String encodeMethod() {
+    return reqType.toString() + " " + url + " " + RTSP_VERSION + CRLF;
+  }
+  private String encodeSeqNum() {
+    return "CSeq: " + rtspSeqNum + CRLF;
+  }
+  private String encodeSessionNum() {
+    String ret = "";
+    if (sessionNum != null)
+      ret = "Session: " + sessionNum + CRLF;
+    return ret;
+  }
+  private void encode() {
+    String encodedPacket = "";
+    encodedPacket += encodeMethod();
+    encodedPacket += encodeSeqNum();
+    encodedPacket += encodeSessionNum();
+    this.data = encodedPacket;
+  }
+
+  public int getErrorCode() {
+    return errorCode;
+  }
+  public void setErrorCode(int errorCode) {
+    this.errorCode = errorCode;
+  }
+  public int getRtspSeqNum() {
+    return rtspSeqNum;
+  }
+  public void setRtspSeqNum(int rtspSeqNum) {
+    this.rtspSeqNum = rtspSeqNum;
+  }
+  public int getSessionNum() {
+    return sessionNum;
+  }
+  public void setSessionNum(int sessionNum) {
+    this.sessionNum = sessionNum;
+  }
+  public Request getReqType() {
+    return reqType;
+  }
+  public void setReqType(Request reqType) {
+    this.reqType = reqType;
+  }
+  public String getData() {
+    return data;
+  }
+  public void setData(String data) {
+    this.data = data;
+  }
+  public IStreamCoder getAudioCoder() {
+    return audioCoder;
+  }
+  public void setAudioCoder(IStreamCoder audioCoder) {
+    this.audioCoder = audioCoder;
+  }
+  public IStreamCoder getVideoCoder() {
+    return videoCoder;
+  }
+  public void setVideoCoder(IStreamCoder videoCoder) {
+    this.videoCoder = videoCoder;
+  }
+  public int getaStreamIndex() {
+    return aStreamIndex;
+  }
+  public void setaStreamIndex(int aStreamIndex) {
+    this.aStreamIndex = aStreamIndex;
+  }
+  public int getvStreamIndex() {
+    return vStreamIndex;
+  }
+  public void setvStreamIndex(int vStreamIndex) {
+    this.vStreamIndex = vStreamIndex;
+  }
+}

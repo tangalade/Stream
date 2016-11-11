@@ -1,0 +1,12 @@
+package collage;
+
+public class IPacketDatagramPacket {
+  /**
+   * IPacket number in stream
+   */
+  private long iPacketNum;
+  private long iPacketFrameIndex;
+  private long iPacketNumFrames;
+  private long iPacketFrameLength;
+  private byte[] iPacketFrame;
+}

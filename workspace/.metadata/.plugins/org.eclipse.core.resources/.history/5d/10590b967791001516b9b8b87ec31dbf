@@ -1,0 +1,72 @@
+package collage;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.WritableByteChannel;
+
+import com.xuggle.xuggler.IAudioSamples;
+import com.xuggle.xuggler.ICodec;
+import com.xuggle.xuggler.IContainer;
+import com.xuggle.xuggler.IContainerFormat;
+import com.xuggle.xuggler.IPacket;
+import com.xuggle.xuggler.IStreamCoder;
+import com.xuggle.xuggler.IVideoPicture;
+import com.xuggle.xuggler.video.ConverterFactory;
+import com.xuggle.xuggler.video.IConverter;
+
+public class Client {
+
+  public static void main(String[] args) throws IOException {
+    InputPacketStream stream = new BufferedDatagramInputPacketStream();
+    FakeDisp serverDisp;
+    FakeSpeaker serverSpeaker;
+    
+    IVideoPicture picture = null;
+    IAudioSamples samples = null;
+    while (!stream.isDone()) {
+      long frameStart = System.currentTimeMillis();
+      IPacket packet = stream.getNextPacket();
+      System.out.println("MediaStream read packet: " + packet);
+      IStreamCoder decoder = stream.getStreamDecoder(packet);
+      if (decoder.getCodecType() == ICodec.Type.CODEC_TYPE_VIDEO) {
+        if (picture == null)
+          picture = IVideoPicture.make(decoder.getPixelType(), decoder.getWidth(), decoder.getHeight());
+        IConverter converter = ConverterFactory.createConverter(
+            ConverterFactory.XUGGLER_BGR_24, decoder.getPixelType(), decoder.getWidth(), decoder.getHeight());
+
+        decoder.decodeVideo(picture, packet, 0);
+        System.out.println("MediaStream decoded video: " + picture);
+        if (picture.isComplete()) {
+          BufferedImage nextImg = converter.toImage(picture);
+          serverDisp.updateFull(nextImg);
+          long delay = millisecondsUntilTimeToDisplay(picture);
+          try {
+            if (delay > 0)
+              Thread.sleep(delay);
+          } catch (InterruptedException e) {
+            return;
+          }
+          picture = null;
+        }
+        System.out.println((System.currentTimeMillis()-frameStart) + " ms to D");
+      } else if (packet.getStreamIndex() == mediaStream.outAudioStreamId) {
+        if (samples == null)
+          samples = IAudioSamples.make(1024, decoder.getChannels());
+        int offset = 0;
+        while(offset < packet.getSize())
+        {
+          int bytesDecoded = decoder.decodeAudio(samples, packet, offset);
+          if (bytesDecoded < 0)
+            throw new RuntimeException("got error decoding audio in: " + filename);
+          System.out.println("MediaStream decoded audio: " + samples);
+          offset += bytesDecoded;
+          if (samples.isComplete()) {
+            serverSpeaker.play(samples);
+            samples = null;
+          }
+        }
+      }
+  }
+}

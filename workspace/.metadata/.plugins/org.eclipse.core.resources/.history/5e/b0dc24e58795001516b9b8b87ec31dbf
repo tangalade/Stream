@@ -1,0 +1,94 @@
+package collage;
+
+import com.xuggle.xuggler.IStreamCoder;
+
+public class RTSPResponsePacket extends RTSPPacket {
+  private int errorCode;
+  private int rtspSeqNum;
+  private Request reqType;
+  
+  private MediaStream mediaStream = null;
+  
+  public RTSPResponsePacket(Request reqType, int errorCode, int rtspSeqNum) {
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.data = encode();
+  }
+  
+  public RTSPResponsePacket(Request reqType, int errorCode, int rtspSeqNum, MediaStream mediaStream) { 
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.mediaStream = mediaStream;
+    this.data = encode();
+  }
+  
+  private String encodeStatus() {
+    return "RTSP/1.0 " + errorCode + " OK" + CRLF;
+  }
+  private String encodeSeqNum() {
+    return "CSeq: " + rtspSeqNum + CRLF;
+  }
+  private String encodeSessionNum() {
+    String ret = "";
+    if (reqType != Request.OPTIONS && reqType != Request.DESCRIBE)
+      ret = "Session: " + sessionNum;
+    return ret;
+  }
+  private String encodeContent() {
+    String all = "";
+    String content = "";
+    int contentLength = 0;
+    switch (reqType) {
+    case OPTIONS:
+      content += "Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE";
+      break;
+    case DESCRIBE:
+      if (mediaStream == null)
+        throw new IllegalArgumentException("null mediaStream");
+      IStreamCoder audioDecoder = mediaStream.getAudioDecoder();
+      IStreamCoder videoDecoder = mediaStream.getVideoDecoder();
+      int aStreamIndex = mediaStream.getVideoStreamId();
+      int vStreamIndex = mediaStream.getVideoStreamId();
+      if (audioDecoder != null && aStreamIndex != -1) {
+        content += "aStreamIndex=" + mediaStream.getAudioStreamId();
+        content += "aCodecId="     + audioDecoder.getCodecID().swigValue();
+        content += "aSampleRate="  + audioDecoder.getSampleRate();
+        content += "aChannels="    + audioDecoder.getChannels();
+      };
+      if (videoDecoder != null && vStreamIndex != -1) {
+        content += "vStreamIndex=" + mediaStream.getVideoStreamId();
+        content += "vCodecId="     + videoDecoder.getCodecID().swigValue();
+        content += "vWidth="       + videoDecoder.getWidth();
+        content += "vHeight="      + videoDecoder.getHeight();
+        content += "vPixelType="   + videoDecoder.getPixelType().swigValue();
+        content += "vTimeBase="    + videoDecoder.getTimeBase().getValue();
+      }
+      break;
+    default:
+      break;
+    }
+    contentLength += content.length();
+    if (contentLength > 0) {
+      all += "Content-Length: " + contentLength + CRLF;
+      all += CRLF;
+      all += content + CRLF;
+    }
+    return all;
+  }
+  private String encode() {
+    String encodedPacket = "";
+    encodedPacket += encodeStatus();
+    encodedPacket += encodeSeqNum();
+    encodedPacket += encodeSessionNum();
+    encodedPacket += encodeContent();
+    return encodedPacket;
+  }
+
+  public static class OPTIONS {
+    public OPTIONS(int errorCode, int rtspSeqNum) {
+      
+    }
+  }
+}

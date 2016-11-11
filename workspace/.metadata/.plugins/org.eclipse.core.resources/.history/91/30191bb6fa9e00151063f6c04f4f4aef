@@ -1,0 +1,199 @@
+package collage;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import com.xuggle.ferry.IBuffer;
+import com.xuggle.xuggler.IPacket;
+import com.xuggle.xuggler.IRational;
+
+public class IPacketFlat {
+  public static final int HEADER_SIZE = (4*Long.BYTES) + (5*Integer.BYTES) + Byte.BYTES;
+  private long dts;
+  private long pts;
+  private byte keyPacket;
+  private int flags;
+  private int streamIndex;
+  private long duration;
+  private long position;
+  private int timeBaseNum;
+  private int timeBaseDen;
+  private int iPacketDataLength;
+  private byte[] iPacketData;
+  public IPacket iPacket = null;
+  private byte[] flatData;
+    
+  public static void main(String[] args) {
+    byte[] buf = new byte[10];
+    for (int i=0; i<buf.length; i++)
+      buf[i] = 1;
+    IPacket packet = IPacket.make();
+    packet.setTimeBase(CollageGlobal.DEFAULT_VIDEO_TIME_BASE);
+    packet.setData(IBuffer.make(null, buf, 0, buf.length));
+    packet.setDts(0);
+    packet.setPts(0);
+    try {
+      IPacketFlat encoded = IPacketFlat.encode(packet);
+      System.out.println("Encoding test passed");
+      IPacketFlat decoded = IPacketFlat.decode(encoded.flatData());
+      System.out.println("Decoding test passed");
+      System.out.println("Comparison test " + (encoded.equals(decoded) ? "passed" : "failed"));
+      System.out.println(encoded.iPacket().equals(decoded.iPacket()));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+  
+  public static IPacketFlat encode(IPacket packet) {
+    if (packet == null)
+      throw new IllegalArgumentException("Cannot encode null packet");
+
+    IPacketFlat flat = new IPacketFlat();
+    flat.iPacket = packet;
+    flat.dts = packet.getDts();
+    flat.pts = packet.getPts();
+    flat.keyPacket = (byte) (packet.isKeyPacket() ? 1 : 0);
+    flat.flags = packet.getFlags();
+    flat.streamIndex = packet.getStreamIndex();
+    flat.duration = packet.getDuration();
+    flat.position = packet.getPosition();
+    flat.timeBaseNum = packet.getTimeBase().getNumerator();
+    flat.timeBaseDen = packet.getTimeBase().getDenominator();
+    IBuffer iBuffer = packet.getData();
+    flat.iPacketData = iBuffer.getByteArray(0, iBuffer.getSize());
+    flat.iPacketDataLength = flat.iPacketData.length;
+    
+    flat.encode();
+    
+    return flat;
+  }
+  
+  public static IPacketFlat decode(byte[] flatData) {
+    if (flatData.length < HEADER_SIZE)
+      throw new IllegalArgumentException("Bad length IPacketFlat");
+    
+    IPacketFlat flat = new IPacketFlat();
+    flat.flatData = flatData;
+    
+    flat.decode();
+    
+    return flat;
+  }
+  
+  private void encode() {
+    ByteBuffer buf = ByteBuffer.allocate(HEADER_SIZE + iPacketDataLength);
+    buf.putLong(dts);
+    buf.putLong(pts);
+    buf.put(keyPacket);
+    buf.putInt(flags);
+    buf.putInt(streamIndex);
+    buf.putLong(duration);
+    buf.putLong(position);
+    buf.putInt(timeBaseNum);
+    buf.putInt(timeBaseDen);
+    buf.putInt(iPacketDataLength);
+    buf.put(iPacketData);
+    flatData = buf.array();
+  }
+  
+  private void decode() {
+    ByteBuffer buf = ByteBuffer.wrap(flatData);
+    dts = buf.getLong();
+    pts = buf.getLong();
+    keyPacket = buf.get();
+    flags = buf.getInt();
+    streamIndex = buf.getInt();
+    duration = buf.getLong();
+    position = buf.getLong();
+    timeBaseNum = buf.getInt();
+    timeBaseDen = buf.getInt();
+    iPacketDataLength = buf.getInt();
+    if (buf.remaining() != iPacketDataLength)
+      throw new IllegalArgumentException("Decoded length != iPacketData length");
+    iPacketData = new byte[iPacketDataLength];
+    buf.get(iPacketData);
+    
+    iPacket = IPacket.make();
+    iPacket.setData(IBuffer.make(null, iPacketData, 0, iPacketDataLength));
+    iPacket.setDts(dts);
+    iPacket.setPts(pts);
+    iPacket.setKeyPacket(keyPacket == 1);
+    iPacket.setFlags(flags);
+    iPacket.setStreamIndex(streamIndex);
+    iPacket.setDuration(duration);
+    iPacket.setPosition(position);
+    iPacket.setTimeBase(IRational.make(timeBaseNum, timeBaseDen));
+  }
+
+  @Override
+  public int hashCode() {
+    int code = 1;
+    code = code * 31 + (int)dts;
+    code = code * 17 + (int)pts;
+    code = code * 31 + (int)keyPacket;
+    code = code * 17 + flags;
+    code = code * 31 + streamIndex;
+    code = code * 17 + (int)duration;
+    code = code * 31 + (int)position;
+    code = code * 17 + timeBaseNum;
+    code = code * 31 + timeBaseDen;
+    code = code * 17 + iPacketDataLength;
+    code = code * 31 + Arrays.hashCode(iPacketData);
+    return code;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof IPacketFlat)) return false;
+    IPacketFlat other = (IPacketFlat)obj;
+    if (dts != other.dts) return false;
+    if (pts != other.pts) return false;
+    if (keyPacket != other.keyPacket) return false;
+    if (flags != other.flags) return false;
+    if (streamIndex != other.streamIndex) return false;
+    if (duration != other.duration) return false;
+    if (position != other.position) return false;
+    if (timeBaseNum != other.timeBaseNum) return false;
+    if (timeBaseDen != other.timeBaseDen) return false;
+    if (iPacketDataLength != other.iPacketDataLength) return false;
+    if (!Arrays.equals(iPacketData,other.iPacketData)) return false;
+    return true;
+  }
+
+  public long dts() {
+    return dts;
+  }
+  public long pts() {
+    return pts;
+  }
+  public boolean keyPacket() {
+    return keyPacket == 1;
+  }
+  public int flags() {
+    return flags;
+  }
+  public int streamIndex() {
+    return streamIndex;
+  }
+  public long duration() {
+    return duration;
+  }
+  public long position() {
+    return position;
+  }
+  public IRational timeBase() {
+    return IRational.make(timeBaseNum, timeBaseDen);
+  }
+  public int iPacketDataLength() {
+    return iPacketDataLength;
+  }
+  public byte[] iPacketData() {
+    return iPacketData;
+  }
+  public IPacket iPacket() {
+    return iPacket;
+  }
+  public byte[] flatData() {
+    return flatData;
+  }
+}

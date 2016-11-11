@@ -1,0 +1,26 @@
+package collage;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.WritableByteChannel;
+
+import com.xuggle.xuggler.IContainer;
+import com.xuggle.xuggler.IContainerFormat;
+
+public class Client {
+
+  public static void main(String[] args) throws IOException {
+    InputPacketStream stream = new BufferedDatagramInputPacketStream();
+    IContainer container = IContainer.make();
+    
+    DatagramChannel channel = DatagramChannel.open();
+    channel.connect(new InetSocketAddress("localhost", CollageGlobal.port));
+    container.open((WritableByteChannel)channel, IContainerFormat.make());
+    
+    if (container.queryStreamMetaData() < 0)
+      throw new RuntimeException("Unable to query stream metadata");
+    
+    
+  }
+}

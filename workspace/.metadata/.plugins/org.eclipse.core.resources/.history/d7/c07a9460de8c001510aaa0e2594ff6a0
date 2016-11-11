@@ -1,0 +1,12 @@
+package collage;
+
+import com.xuggle.xuggler.IPacket;
+
+public interface InputPacketStream {
+
+  public void start();
+  
+  public IPacket tryNextPacket();
+
+  public IPacket getNextPacket();
+}

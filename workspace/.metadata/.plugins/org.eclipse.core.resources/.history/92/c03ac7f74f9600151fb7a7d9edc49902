@@ -1,0 +1,159 @@
+package collage;
+
+import com.xuggle.xuggler.IStreamCoder;
+
+public class RTSPResponsePacket extends RTSPPacket {
+  private ErrorCode errorCode;
+  private int rtspSeqNum;
+  private int sessionNum;
+  private Request reqType;
+  private String data;
+
+  private IStreamCoder audioCoder;
+  private IStreamCoder videoCoder;
+  private int aStreamIndex;
+  private int aStreamIndex;
+  
+  public RTSPResponsePacket(Request reqType, ErrorCode errorCode, int rtspSeqNum) throws IllegalArgumentException {
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    encode();
+  }
+  public RTSPResponsePacket(Request reqType, ErrorCode errorCode, int rtspSeqNum,
+      MediaStream mediaStream) throws IllegalArgumentException { 
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    if (mediaStream == null)
+      throw new IllegalArgumentException("null mediaStream");
+    this.audioCoder = mediaStream.getAudioDecoder();
+    this.videoCoder = mediaStream.getVideoDecoder();
+    this.aStreamIndex = mediaStream.getAudioStreamId();
+    this.vStreamIndex = mediaStream.getVideoStreamId();
+    encode();
+  }
+  public RTSPResponsePacket(Request reqType, ErrorCode errorCode, int rtspSeqNum,
+      IStreamCoder audioCoder, IStreamCoder videoCoder,
+      int aStreamIndex, int vStreamIndex) throws IllegalArgumentException { 
+    this.reqType = reqType;
+    this.errorCode = errorCode;
+    this.rtspSeqNum = rtspSeqNum;
+    this.audioCoder = audioCoder;
+    this.videoCoder = videoCoder;
+    this.aStreamIndex = aStreamIndex;
+    this.vStreamIndex = aStreamIndex;
+    encode();
+  }
+  
+  private String encodeStatus() {
+    return "RTSP/1.0 " + errorCode + " OK" + CRLF;
+  }
+  private String encodeSeqNum() {
+    return "CSeq: " + rtspSeqNum + CRLF;
+  }
+  private String encodeSessionNum() {
+    String ret = "";
+    if (reqType != Request.OPTIONS && reqType != Request.DESCRIBE)
+      ret = "Session: " + sessionNum;
+    return ret;
+  }
+  private String encodeContent() {
+    String all = "";
+    String content = "";
+    int contentLength = 0;
+    switch (reqType) {
+    case OPTIONS:
+      content += "Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE";
+      break;
+    case DESCRIBE:
+      if (audioCoder != null && aStreamIndex != -1) {
+        content += "aStreamIndex=" + aStreamIndex;
+        content += "aCodecId="     + audioCoder.getCodecID().swigValue();
+        content += "aSampleRate="  + audioCoder.getSampleRate();
+        content += "aChannels="    + audioCoder.getChannels();
+      };
+      if (videoCoder != null && vStreamIndex != -1) {
+        content += "vStreamIndex=" + vStreamIndex;
+        content += "vCodecId="     + videoCoder.getCodecID().swigValue();
+        content += "vWidth="       + videoCoder.getWidth();
+        content += "vHeight="      + videoCoder.getHeight();
+        content += "vPixelType="   + videoCoder.getPixelType().swigValue();
+        content += "vTimeBase="    + videoCoder.getTimeBase().getValue();
+      }
+      break;
+    default:
+      break;
+    }
+    contentLength += content.length();
+    if (contentLength > 0) {
+      all += "Content-Length: " + contentLength + CRLF;
+      all += CRLF;
+      all += content + CRLF;
+    }
+    return all;
+  }
+  private void encode() {
+    String encodedPacket = "";
+    encodedPacket += encodeStatus();
+    encodedPacket += encodeSeqNum();
+    encodedPacket += encodeSessionNum();
+    encodedPacket += encodeContent();
+    this.data = encodedPacket;
+  }
+
+  public int getErrorCode() {
+    return errorCode;
+  }
+  public void setErrorCode(int errorCode) {
+    this.errorCode = errorCode;
+  }
+  public int getRtspSeqNum() {
+    return rtspSeqNum;
+  }
+  public void setRtspSeqNum(int rtspSeqNum) {
+    this.rtspSeqNum = rtspSeqNum;
+  }
+  public int getSessionNum() {
+    return sessionNum;
+  }
+  public void setSessionNum(int sessionNum) {
+    this.sessionNum = sessionNum;
+  }
+  public Request getReqType() {
+    return reqType;
+  }
+  public void setReqType(Request reqType) {
+    this.reqType = reqType;
+  }
+  public String getData() {
+    return data;
+  }
+  public void setData(String data) {
+    this.data = data;
+  }
+  public IStreamCoder getAudioCoder() {
+    return audioCoder;
+  }
+  public void setAudioCoder(IStreamCoder audioCoder) {
+    this.audioCoder = audioCoder;
+  }
+  public IStreamCoder getVideoCoder() {
+    return videoCoder;
+  }
+  public void setVideoCoder(IStreamCoder videoCoder) {
+    this.videoCoder = videoCoder;
+  }
+  public int getaStreamIndex() {
+    return aStreamIndex;
+  }
+  public void setaStreamIndex(int aStreamIndex) {
+    this.aStreamIndex = aStreamIndex;
+  }
+  public int getvStreamIndex() {
+    return vStreamIndex;
+  }
+  public void setvStreamIndex(int vStreamIndex) {
+    this.vStreamIndex = vStreamIndex;
+  }
+}
